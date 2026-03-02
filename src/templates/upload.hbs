@@ -1,0 +1,309 @@
+<div class="min-h-screen flex flex-col items-center justify-center p-6">
+  <div class="w-full max-w-2xl">
+    <div class="text-center mb-8 animate-fade-in">
+      <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-primary-500 to-secondary-400 bg-clip-text text-transparent pb-2 leading-tight">
+        {{appName}}
+      </h1>
+      <p class="text-slate-400 text-lg mb-6">
+        {{tagline}}
+      </p>
+      <div class="privacy-badge">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+        <span>{{privacyBadge}}</span>
+      </div>
+    </div>
+
+    <div class="card p-8 animate-slide-up">
+      <form id="upload-form" class="space-y-6">
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">
+            Upload Your Data
+          </label>
+          <div class="relative">
+            <input
+              type="file"
+              id="file-input"
+              name="file"
+              accept=".csv"
+              required
+              class="hidden"
+            />
+            <label
+              for="file-input"
+              class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-slate-600 rounded-lg cursor-pointer hover:border-primary-500 transition-colors bg-slate-900/30"
+            >
+              <svg class="w-12 h-12 text-slate-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+              </svg>
+              <p class="text-sm text-slate-400">
+                <span class="font-semibold">Click to upload</span> or drag and drop
+              </p>
+              <p class="text-xs text-slate-500 mt-1">CSV files only</p>
+            </label>
+          </div>
+          <p id="file-name" class="mt-2 text-sm text-slate-400"></p>
+        </div>
+
+        <div class="border-t border-slate-700 pt-4">
+          <button
+            type="button"
+            id="advanced-toggle"
+            class="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-300 transition-colors"
+          >
+            <svg id="advanced-icon" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            <span>Advanced Options</span>
+          </button>
+          
+          <div id="advanced-options" class="hidden mt-4 space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="currency" class="block text-sm font-medium text-slate-300 mb-2">
+                  Currency Filter
+                </label>
+                <input
+                  type="text"
+                  id="currency"
+                  name="currency"
+                  placeholder="e.g., USD"
+                  class="input"
+                />
+              </div>
+              <div>
+                <label for="game" class="block text-sm font-medium text-slate-300 mb-2">
+                  Game Filter
+                </label>
+                <input
+                  type="text"
+                  id="game"
+                  name="game"
+                  placeholder="e.g., Dice"
+                  class="input"
+                />
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="top" class="block text-sm font-medium text-slate-300 mb-2">
+                  Top Number of Results
+                </label>
+                <input
+                  type="number"
+                  id="top"
+                  name="top"
+                  value="10"
+                  min="1"
+                  max="100"
+                  class="input"
+                />
+              </div>
+              <div>
+                <label for="minPlays" class="block text-sm font-medium text-slate-300 mb-2">
+                  Min Plays
+                </label>
+                <input
+                  type="number"
+                  id="minPlays"
+                  name="minPlays"
+                  value="20"
+                  min="1"
+                  class="input"
+                />
+              </div>
+            </div>
+
+            <div class="border-t border-slate-700 pt-4 mt-4">
+              <h4 class="text-sm font-medium text-slate-300 mb-3">Optional: Transaction History</h4>
+              <div class="space-y-3">
+                <div>
+                  <label for="deposit-file" class="block text-sm font-medium text-slate-300 mb-2">
+                    Deposit CSV (Optional)
+                  </label>
+                  <input
+                    type="file"
+                    id="deposit-file"
+                    name="depositFile"
+                    accept=".csv"
+                    class="hidden"
+                  />
+                  <label
+                    for="deposit-file"
+                    class="flex items-center justify-center w-full h-12 border border-slate-600 rounded-lg cursor-pointer hover:border-primary-500 transition-colors bg-slate-900/30 text-sm text-slate-400"
+                  >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <span id="deposit-file-name">Upload Deposit CSV</span>
+                  </label>
+                </div>
+                <div>
+                  <label for="withdrawal-file" class="block text-sm font-medium text-slate-300 mb-2">
+                    Withdrawal CSV (Optional)
+                  </label>
+                  <input
+                    type="file"
+                    id="withdrawal-file"
+                    name="withdrawalFile"
+                    accept=".csv"
+                    class="hidden"
+                  />
+                  <label
+                    for="withdrawal-file"
+                    class="flex items-center justify-center w-full h-12 border border-slate-600 rounded-lg cursor-pointer hover:border-primary-500 transition-colors bg-slate-900/30 text-sm text-slate-400"
+                  >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <span id="withdrawal-file-name">Upload Withdrawal CSV</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="error-message" class="hidden p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm"></div>
+
+        <div id="progress-container" class="hidden">
+          <div class="flex justify-between text-sm text-slate-400 mb-2">
+            <span>Processing...</span>
+            <span id="progress-text">0%</span>
+          </div>
+          <div class="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
+            <div id="progress-bar" class="bg-gradient-to-r from-primary-500 to-secondary-400 h-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          id="submit-btn"
+          class="btn-primary w-full flex items-center justify-center gap-2"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+          <span>Analyze Data</span>
+        </button>
+      </form>
+    </div>
+
+    <div class="mt-8 text-center text-sm text-slate-500">
+      <p>{{privacyNotice}}</p>
+    </div>
+
+    <button
+      type="button"
+      id="how-to-btn"
+      class="mt-6 mx-auto flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:text-slate-300 border border-slate-700 hover:border-slate-600 rounded-lg transition-colors"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span>How to Use</span>
+    </button>
+  </div>
+
+  <footer class="mt-12 pb-8 text-center text-sm text-slate-500">
+    <div class="flex items-center justify-center gap-4 mb-3">
+      <a href="{{githubUrl}}" target="_blank" rel="noopener noreferrer" class="hover:text-slate-400 transition-colors flex items-center gap-1">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+        GitHub
+      </a>
+      <span class="text-slate-700">•</span>
+      <a href="{{donateUrl}}" target="_blank" rel="noopener noreferrer" class="hover:text-slate-400 transition-colors flex items-center gap-1">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </svg>
+        Donate
+      </a>
+    </div>
+    <p>{{copyright}}</p>
+  </footer>
+</div>
+
+<!-- How to Use Modal -->
+<div id="how-to-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+  <div class="card max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+    <div class="sticky top-0 bg-slate-800 p-6 border-b border-slate-700 flex items-center justify-between">
+      <h2 class="text-2xl font-bold text-slate-100">{{modalTitle}}</h2>
+      <button id="close-modal" class="text-slate-400 hover:text-slate-300 transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div class="p-6 space-y-6 text-slate-300">
+      <section>
+        <h3 class="text-lg font-semibold text-slate-100 mb-3">📊 Getting Started</h3>
+        <ol class="list-decimal list-inside space-y-2 text-sm">
+          <li>Export your betting history as a CSV file from your gambling platform</li>
+          <li>Click the upload area or drag and drop your CSV file</li>
+          <li>Click "Analyze Data" to process your statistics</li>
+        </ol>
+      </section>
+
+      <section>
+        <h3 class="text-lg font-semibold text-slate-100 mb-3">🔧 Advanced Options</h3>
+        <p class="text-sm mb-2">Click "Advanced Options" to customize your analysis:</p>
+        <ul class="list-disc list-inside space-y-2 text-sm ml-4">
+          <li><strong>Currency Filter:</strong> Filter bets by specific currency (e.g., USD, BTC)</li>
+          <li><strong>Game Filter:</strong> Filter by game name (e.g., Dice, Blackjack)</li>
+          <li><strong>Top Number of Results:</strong> Limit how many games/providers to display (default: 10)</li>
+          <li><strong>Min Plays:</strong> Only show games/providers with minimum number of bets (default: 20)</li>
+          <li><strong>Deposit CSV (Optional):</strong> Upload your deposit history to track total deposits</li>
+          <li><strong>Withdrawal CSV (Optional):</strong> Upload your withdrawal history to track total withdrawals</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3 class="text-lg font-semibold text-slate-100 mb-3">📈 Understanding Your Stats</h3>
+        <ul class="list-disc list-inside space-y-2 text-sm ml-4">
+          <li><strong>ROI (Return on Investment):</strong> Percentage profit/loss on total wagered</li>
+          <li><strong>Win Rate:</strong> Percentage of bets that resulted in profit</li>
+          <li><strong>Net:</strong> Total profit or loss (Payout - Bet Amount)</li>
+          <li><strong>Max Multiplier:</strong> Highest multiplier achieved</li>
+          <li><strong>Streaks:</strong> Consecutive wins or losses</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3 class="text-lg font-semibold text-slate-100 mb-3">🔒 Privacy & Security</h3>
+        <p class="text-sm">
+          All data processing happens <strong>100% in your browser</strong>. Your betting history never leaves your device,
+          is not uploaded to any server, and is not stored anywhere. Once you close the tab, all data is gone.
+        </p>
+      </section>
+
+      <section>
+        <h3 class="text-lg font-semibold text-slate-100 mb-3">📋 CSV Format Requirements</h3>
+        <p class="text-sm mb-2"><strong>Betting History CSV</strong> should include these columns:</p>
+        <ul class="list-disc list-inside space-y-1 text-sm ml-4 mb-4">
+          <li>ID, Game/Game Name, Amount/Bet Amount, Payout, Multiplier, Currency, Status, Time/Created At</li>
+        </ul>
+        <p class="text-sm mb-2"><strong>Deposit CSV</strong> (optional) should include these columns:</p>
+        <ul class="list-disc list-inside space-y-1 text-sm ml-4 mb-4">
+          <li>ID, Status, Type (must be "deposit"), Method, Amount, Currency, Updated At</li>
+          <li>Only transactions with Status = "complete" will be counted</li>
+        </ul>
+        <p class="text-sm mb-2"><strong>Withdrawal CSV</strong> (optional) should include these columns:</p>
+        <ul class="list-disc list-inside space-y-1 text-sm ml-4">
+          <li>ID, Status, Type (must be "withdrawal"), Method, Amount, Currency, Updated At</li>
+          <li>Only transactions with Status = "complete" will be counted</li>
+        </ul>
+      </section>
+
+      <section class="border-t border-slate-700 pt-6">
+        <h3 class="text-lg font-semibold text-slate-100 mb-3">⚠️ Disclaimer</h3>
+        <p class="text-sm text-slate-400">
+          {{disclaimer}}
+        </p>
+      </section>
+    </div>
+  </div>
+</div>

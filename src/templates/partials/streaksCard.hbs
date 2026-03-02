@@ -1,0 +1,24 @@
+<div class="card p-6 h-full flex flex-col">
+  <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+    <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+    </svg>
+    Streaks
+  </h3>
+  <div class="space-y-3 flex-1">
+    <div>
+      <p class="text-sm text-slate-400">Current Streak</p>
+      <span class="badge {{streaks.currentClass}} mt-1">{{streaks.current}}</span>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <p class="text-sm text-slate-400">Longest Win</p>
+        <p class="text-lg font-semibold text-accent-200">{{streaks.longestWin}}</p>
+      </div>
+      <div>
+        <p class="text-sm text-slate-400">Longest Loss</p>
+        <p class="text-lg font-semibold text-red-400">{{streaks.longestLoss}}</p>
+      </div>
+    </div>
+  </div>
+</div>

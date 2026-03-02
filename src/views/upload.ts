@@ -1,13 +1,43 @@
 import type { FilterOptions } from '../types';
+import Handlebars from 'handlebars';
+import uploadTemplate from '../templates/upload.hbs?raw';
 
 export class UploadView {
   private onFileProcess: (file: File, options: FilterOptions) => Promise<void>;
   private isProcessing = false;
   private currentProgress = 0;
   private errorMessage = '';
+  private eventListeners: Array<{ element: HTMLElement; event: string; handler: EventListener }> = [];
 
   constructor(onFileProcess: (file: File, options: FilterOptions) => Promise<void>) {
     this.onFileProcess = onFileProcess;
+  }
+
+  get progress(): number {
+    return this.currentProgress;
+  }
+
+  get lastErrorMessage(): string {
+    return this.errorMessage;
+  }
+
+  public reset(): void {
+    this.isProcessing = false;
+    this.currentProgress = 0;
+    this.errorMessage = '';
+    this.removeEventListeners();
+  }
+
+  private removeEventListeners(): void {
+    for (const { element, event, handler } of this.eventListeners) {
+      element.removeEventListener(event, handler);
+    }
+    this.eventListeners = [];
+  }
+
+  private addEventListener(element: HTMLElement, event: string, handler: EventListener): void {
+    element.addEventListener(event, handler);
+    this.eventListeners.push({ element, event, handler });
   }
 
   public updateProgress(progress: number): void {
@@ -38,160 +68,107 @@ export class UploadView {
   }
 
   public render(): string {
-    return `
-      <div class="min-h-screen flex flex-col items-center justify-center p-6">
-        <div class="w-full max-w-2xl">
-          <div class="text-center mb-8 animate-fade-in">
-            <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-primary-500 to-secondary-400 bg-clip-text text-transparent">
-              Degen Stats V2
-            </h1>
-            <p class="text-slate-400 text-lg mb-6">
-              Privacy-first betting analytics. All processing happens in your browser.
-            </p>
-            <div class="privacy-badge">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-              </svg>
-              <span>100% Client-Side Processing</span>
-            </div>
-          </div>
+    const template = Handlebars.compile(uploadTemplate);
 
-          <div class="card p-8 animate-slide-up">
-            <form id="upload-form" class="space-y-6">
-              <div>
-                <label class="block text-sm font-medium text-slate-300 mb-2">
-                  Upload Your Data
-                </label>
-                <div class="relative">
-                  <input
-                    type="file"
-                    id="file-input"
-                    name="file"
-                    accept=".csv"
-                    required
-                    class="hidden"
-                  />
-                  <label
-                    for="file-input"
-                    class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-slate-600 rounded-lg cursor-pointer hover:border-primary-500 transition-colors bg-slate-900/30"
-                  >
-                    <svg class="w-12 h-12 text-slate-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                    </svg>
-                    <p class="text-sm text-slate-400">
-                      <span class="font-semibold">Click to upload</span> or drag and drop
-                    </p>
-                    <p class="text-xs text-slate-500 mt-1">CSV files only</p>
-                  </label>
-                </div>
-                <p id="file-name" class="mt-2 text-sm text-slate-400"></p>
-              </div>
+    const data = {
+      appName: 'Degen Analytics',
+      tagline: 'Privacy-first betting analytics. All processing happens in your browser.',
+      privacyBadge: '100% Client-Side Processing',
+      privacyNotice:
+        'Your data never leaves your device. Processing is done entirely in your browser.',
+      githubUrl: 'https://github.com/P-0001',
+      donateUrl: 'https://solscan.io/account/JBybLSEQPDVrueVsrh9mktEhdytoNaSBQkQbrMNHZDS7', // Replace with your crypto address
+      copyright: '© 2026 Degen Analytics. All rights reserved.',
+      modalTitle: 'How to Use Degen Analytics',
+      disclaimer:
+        'This tool is not affiliated with any gambling site, casino, or betting platform. Degen Analytics is purely an informational tool for personal use to help you analyze and understand your betting history. Use of this tool does not constitute financial advice, and all gambling activities should be conducted responsibly and within your means.',
+    };
 
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label for="currency" class="block text-sm font-medium text-slate-300 mb-2">
-                    Currency Filter
-                  </label>
-                  <input
-                    type="text"
-                    id="currency"
-                    name="currency"
-                    placeholder="e.g., USD"
-                    class="input"
-                  />
-                </div>
-                <div>
-                  <label for="game" class="block text-sm font-medium text-slate-300 mb-2">
-                    Game Filter
-                  </label>
-                  <input
-                    type="text"
-                    id="game"
-                    name="game"
-                    placeholder="Game name"
-                    class="input"
-                  />
-                </div>
-              </div>
-
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label for="top" class="block text-sm font-medium text-slate-300 mb-2">
-                    Top N Results
-                  </label>
-                  <input
-                    type="number"
-                    id="top"
-                    name="top"
-                    value="10"
-                    min="1"
-                    max="100"
-                    class="input"
-                  />
-                </div>
-                <div>
-                  <label for="minPlays" class="block text-sm font-medium text-slate-300 mb-2">
-                    Min Plays
-                  </label>
-                  <input
-                    type="number"
-                    id="minPlays"
-                    name="minPlays"
-                    value="20"
-                    min="1"
-                    class="input"
-                  />
-                </div>
-              </div>
-
-              <div id="error-message" class="hidden p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm"></div>
-
-              <div id="progress-container" class="hidden">
-                <div class="flex justify-between text-sm text-slate-400 mb-2">
-                  <span>Processing...</span>
-                  <span id="progress-text">0%</span>
-                </div>
-                <div class="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
-                  <div id="progress-bar" class="bg-gradient-to-r from-primary-500 to-secondary-400 h-full transition-all duration-300" style="width: 0%"></div>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                id="submit-btn"
-                class="btn-primary w-full flex items-center justify-center gap-2"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-                <span>Analyze Data</span>
-              </button>
-            </form>
-          </div>
-
-          <div class="mt-8 text-center text-sm text-slate-500">
-            <p>Your data never leaves your device. Processing is done entirely in your browser.</p>
-          </div>
-        </div>
-      </div>
-    `;
+    return template(data);
   }
 
   public attachEventListeners(): void {
+    this.removeEventListeners();
+
     const form = document.getElementById('upload-form') as HTMLFormElement;
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
     const fileNameDisplay = document.getElementById('file-name');
+    const depositFileInput = document.getElementById('deposit-file') as HTMLInputElement;
+    const depositFileNameDisplay = document.getElementById('deposit-file-name');
+    const withdrawalFileInput = document.getElementById('withdrawal-file') as HTMLInputElement;
+    const withdrawalFileNameDisplay = document.getElementById('withdrawal-file-name');
+    const advancedToggle = document.getElementById('advanced-toggle');
+    const advancedOptions = document.getElementById('advanced-options');
+    const advancedIcon = document.getElementById('advanced-icon');
+    const howToBtn = document.getElementById('how-to-btn');
+    const howToModal = document.getElementById('how-to-modal');
+    const closeModal = document.getElementById('close-modal');
 
-    fileInput.addEventListener('change', () => {
-      const file = fileInput.files?.[0];
-      if (file && fileNameDisplay) {
-        fileNameDisplay.textContent = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-      }
-    });
+    if (advancedToggle) {
+      this.addEventListener(advancedToggle, 'click', () => {
+        const isHidden = advancedOptions?.classList.contains('hidden');
+        if (isHidden) {
+          advancedOptions?.classList.remove('hidden');
+          advancedIcon?.classList.add('rotate-90');
+        } else {
+          advancedOptions?.classList.add('hidden');
+          advancedIcon?.classList.remove('rotate-90');
+        }
+      });
+    }
 
-    form.addEventListener('submit', async (e) => {
+    if (howToBtn) {
+      this.addEventListener(howToBtn, 'click', () => {
+        howToModal?.classList.remove('hidden');
+      });
+    }
+
+    if (closeModal) {
+      this.addEventListener(closeModal, 'click', () => {
+        howToModal?.classList.add('hidden');
+      });
+    }
+
+    if (howToModal) {
+      this.addEventListener(howToModal, 'click', (e) => {
+        if (e.target === howToModal) {
+          howToModal.classList.add('hidden');
+        }
+      });
+    }
+
+    this.addEventListener(fileInput, 'change', () => {
+        const file = fileInput.files?.[0];
+        if (file && fileNameDisplay) {
+          fileNameDisplay.textContent = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        }
+      });
+
+    if (depositFileInput) {
+      this.addEventListener(depositFileInput, 'change', () => {
+        const file = depositFileInput.files?.[0];
+        if (file && depositFileNameDisplay) {
+          depositFileNameDisplay.textContent = file.name;
+        } else if (depositFileNameDisplay) {
+          depositFileNameDisplay.textContent = 'Upload Deposit CSV';
+        }
+      });
+    }
+
+    if (withdrawalFileInput) {
+      this.addEventListener(withdrawalFileInput, 'change', () => {
+        const file = withdrawalFileInput.files?.[0];
+        if (file && withdrawalFileNameDisplay) {
+          withdrawalFileNameDisplay.textContent = file.name;
+        } else if (withdrawalFileNameDisplay) {
+          withdrawalFileNameDisplay.textContent = 'Upload Withdrawal CSV';
+        }
+      });
+    }
+
+    this.addEventListener(form, 'submit', async (e) => {
       e.preventDefault();
-      
+
       if (this.isProcessing) return;
 
       const file = fileInput.files?.[0];
@@ -221,11 +198,23 @@ export class UploadView {
       }
 
       const formData = new FormData(form);
+      
+      // Validate and parse numeric inputs
+      const topRaw = formData.get('top')?.toString() || '';
+      const minPlaysRaw = formData.get('minPlays')?.toString() || '';
+      const topValue = parseInt(topRaw, 10);
+      const minPlaysValue = parseInt(minPlaysRaw, 10);
+      
+      const currencyRaw = formData.get('currency')?.toString();
+      const gameRaw = formData.get('game')?.toString();
+      
       const options: FilterOptions = {
-        currency: formData.get('currency') as string || undefined,
-        game: formData.get('game') as string || undefined,
-        top: parseInt(formData.get('top') as string) || 10,
-        minPlays: parseInt(formData.get('minPlays') as string) || 20,
+        currency: currencyRaw && currencyRaw.trim() !== '' ? currencyRaw.trim() : undefined,
+        game: gameRaw && gameRaw.trim() !== '' ? gameRaw.trim() : undefined,
+        top: !isNaN(topValue) && topValue > 0 ? topValue : 10,
+        minPlays: !isNaN(minPlaysValue) && minPlaysValue >= 0 ? minPlaysValue : 20,
+        depositFile: depositFileInput?.files?.[0],
+        withdrawalFile: withdrawalFileInput?.files?.[0],
       };
 
       try {

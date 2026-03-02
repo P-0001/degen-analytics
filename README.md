@@ -1,4 +1,4 @@
-# Degen Stats V2 - Privacy-First Betting Analytics
+# Degen Analytics - Privacy-First Betting Analytics
 
 A completely remastered web application for analyzing betting statistics with a focus on **privacy**, **modern design**, and **performance**.
 
@@ -24,6 +24,9 @@ A completely remastered web application for analyzing betting statistics with a 
 - **TailwindCSS** - Utility-first CSS framework
 - **Web Workers** - Background processing for performance
 - **Vanilla JS** - No heavy framework dependencies
+- **Vitest** - Fast unit testing with UI
+- **ESLint** - Code linting and quality checks
+- **Prettier** - Code formatting
 
 ## 📦 Installation
 
@@ -37,6 +40,23 @@ bun install
 ```bash
 # Start dev server (http://localhost:6768)
 bun run dev
+
+# Type checking
+bun run type-check
+
+# Run tests
+bun run test              # Watch mode
+bun run test:run          # Run once
+bun run test:ui           # Interactive UI
+bun run test:coverage     # With coverage
+
+# Linting
+bun run lint              # Check for errors
+bun run lint:fix          # Auto-fix errors
+
+# Formatting
+bun run format            # Format code
+bun run format:check      # Check formatting
 ```
 
 ## 🏗️ Build
@@ -93,21 +113,20 @@ ID,Game,Provider,Amount,Multiplier,Payout,Currency,Status,Created At,Updated At
 - No data persistence or storage
 - No third-party scripts or tracking
 
+## ✅ Quality Assurance
+
+This project includes comprehensive tooling for code quality:
+
+- **Testing** - Vitest with happy-dom for unit and integration tests
+- **Linting** - ESLint with TypeScript support for code quality
+- **Formatting** - Prettier for consistent code style
+- **Type Safety** - Strict TypeScript configuration
+
+See [TESTING.md](TESTING.md) for detailed documentation.
+
 ## 📝 License
 
-Private - For personal use only
-
-## 🆚 V2 vs V1
-
-| Feature | V1 | V2 |
-|---------|----|----|
-| **Privacy** | Server-side processing | 100% client-side |
-| **UI Framework** | Server-rendered HTML | Modern Vite + TailwindCSS |
-| **Performance** | Synchronous processing | Web Workers + streaming |
-| **Design** | Basic HTML templates | Modern, animated UI |
-| **Build Tool** | Bun serve | Vite with HMR |
-| **Bundle Size** | N/A | Minimal, optimized |
-
+Private - For personal use only|
 ---
 
 Built with ❤️ for privacy-conscious users

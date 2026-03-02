@@ -6,7 +6,7 @@
   * {
     @apply border-slate-700;
   }
-  
+
   body {
     @apply antialiased;
   }
@@ -16,63 +16,63 @@
   .card {
     @apply bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 shadow-xl;
   }
-  
+
   .btn {
     @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900;
   }
-  
+
   .btn-primary {
     @apply btn bg-primary-600 hover:bg-primary-700 text-white focus:ring-primary-500 shadow-lg shadow-primary-900/50;
   }
-  
+
   .btn-secondary {
     @apply btn bg-slate-700 hover:bg-slate-600 text-slate-100 focus:ring-slate-500;
   }
-  
+
   .input {
     @apply w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all;
   }
-  
+
   .stat-card {
     @apply card p-6 hover:border-primary-500/50 transition-all duration-300;
   }
-  
+
   .table-container {
     @apply overflow-x-auto rounded-lg border border-slate-700/50;
   }
-  
+
   .table {
     @apply w-full text-sm text-left;
   }
-  
+
   .table thead {
     @apply bg-slate-800/80 text-xs uppercase tracking-wider text-slate-400;
   }
-  
+
   .table th {
     @apply px-6 py-4 font-semibold;
   }
-  
+
   .table tbody tr {
     @apply border-t border-slate-700/50 hover:bg-slate-700/30 transition-colors;
   }
-  
+
   .table td {
     @apply px-6 py-4;
   }
-  
+
   .badge {
     @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
   }
-  
+
   .badge-success {
     @apply badge bg-accent-200/20 text-accent-200 border border-accent-200/30;
   }
-  
+
   .badge-danger {
     @apply badge bg-red-500/20 text-red-400 border border-red-500/30;
   }
-  
+
   .badge-neutral {
     @apply badge bg-slate-500/20 text-slate-400 border border-slate-500/30;
   }

@@ -39,6 +39,27 @@ export interface ProviderStats {
   winRate: number;
 }
 
+export interface TransactionRecord {
+  id: string;
+  status: string;
+  type: 'deposit' | 'withdrawal';
+  method: string;
+  amount: number;
+  currency: string;
+  externalAmount?: number;
+  externalCurrency?: string;
+  externalTxid?: string;
+  updatedAt: Date;
+}
+
+export interface TransactionStats {
+  totalDeposits: number;
+  totalWithdrawals: number;
+  depositCount: number;
+  withdrawalCount: number;
+  netTransactions: number;
+}
+
 export interface OverallStats {
   totalBets: number;
   totalBet: number;
@@ -56,6 +77,7 @@ export interface OverallStats {
   firstBetTime?: Date;
   lastBetTime?: Date;
   currency: string;
+  transactions?: TransactionStats;
 }
 
 export interface Streaks {
@@ -78,6 +100,8 @@ export interface FilterOptions {
   game?: string;
   minPlays?: number;
   top?: number;
+  depositFile?: File;
+  withdrawalFile?: File;
 }
 
 export interface WorkerMessage {

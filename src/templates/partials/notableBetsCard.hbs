@@ -1,0 +1,24 @@
+<div class="card p-6 h-full flex flex-col">
+  <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+    <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+    </svg>
+    Notable Bets
+  </h3>
+  <div class="space-y-3 flex-1">
+    {{#if maxWin}}
+    <div>
+      <p class="text-sm text-slate-400">Biggest Win</p>
+      <p class="text-lg font-semibold text-accent-200">{{maxWin.amount}}</p>
+      <p class="text-xs text-slate-500">{{maxWin.game}}</p>
+    </div>
+    {{/if}}
+    {{#if maxLoss}}
+    <div>
+      <p class="text-sm text-slate-400">Biggest Loss</p>
+      <p class="text-lg font-semibold text-red-400">{{maxLoss.amount}}</p>
+      <p class="text-xs text-slate-500">{{maxLoss.game}}</p>
+    </div>
+    {{/if}}
+  </div>
+</div>

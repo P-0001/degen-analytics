@@ -1,0 +1,22 @@
+<div class="card p-6 h-full flex flex-col">
+  <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+    <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+    </svg>
+    Deposits vs Withdrawals
+  </h3>
+  <div class="space-y-3 flex-1">
+    <div>
+      <p class="text-sm text-slate-400">Total Deposits</p>
+      <p class="text-lg font-semibold text-accent-200">{{transactions.totalDeposits}} <span class="text-xs text-slate-400">({{transactions.depositCount}})</span></p>
+    </div>
+    <div>
+      <p class="text-sm text-slate-400">Total Withdrawals</p>
+      <p class="text-lg font-semibold text-secondary-400">{{transactions.totalWithdrawals}} <span class="text-xs text-slate-400">({{transactions.withdrawalCount}})</span></p>
+    </div>
+    <div class="pt-2 border-t border-slate-700">
+      <p class="text-sm text-slate-400">Net Balance</p>
+      <p class="text-lg font-bold {{transactions.netClass}}">{{transactions.netTransactions}}</p>
+    </div>
+  </div>
+</div>
