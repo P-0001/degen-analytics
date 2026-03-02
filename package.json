@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "bunx --bun vite",
+    "deploy": "bun run build && bunx --bun fly deploy",
     "build": "bun run type-check && bunx --bun vite build",
     "preview": "bunx --bun vite preview",
     "type-check": "bun tsc --noEmit",
