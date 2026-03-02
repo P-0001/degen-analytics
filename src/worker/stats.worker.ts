@@ -104,7 +104,7 @@ function parseCSV(text: string): RawBetRecord[] {
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
-    
+
     const values = parseCSVLine(line);
     if (values.length === 1 && values[0] === '') continue;
 

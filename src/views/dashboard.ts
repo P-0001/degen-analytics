@@ -1,4 +1,4 @@
-import type { StatsResult, FilterOptions } from '../types';
+import type { StatsResult } from '../types';
 import Handlebars from 'handlebars';
 import dashboardTemplate from '../templates/dashboard.hbs?raw';
 import statCardPartial from '../templates/partials/statCard.hbs?raw';
@@ -9,7 +9,6 @@ import transactionsCardPartial from '../templates/partials/transactionsCard.hbs?
 
 export class DashboardView {
   private stats: StatsResult | null = null;
-  private options: FilterOptions = {};
   private onBack: () => void;
   private static helpersRegistered = false;
   private backButtonHandler: (() => void) | null = null;
@@ -23,33 +22,7 @@ export class DashboardView {
     if (this.helpersRegistered) return;
     this.helpersRegistered = true;
 
-    Handlebars.registerHelper('formatNumber', (value: number) => {
-      return new Intl.NumberFormat(undefined).format(value);
-    });
-
-    Handlebars.registerHelper('formatCurrency', (value: number, curr: string) => {
-      try {
-        return new Intl.NumberFormat(undefined, {
-          style: 'currency',
-          currency: curr || 'USD',
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(value);
-      } catch {
-        return new Intl.NumberFormat(undefined, {
-          style: 'currency',
-          currency: 'USD',
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(value);
-      }
-    });
-
-    Handlebars.registerHelper('formatPercent', (value: number) => {
-      return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
-    });
-
-    Handlebars.registerHelper('eq', (a: any, b: any) => a === b);
+    Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
 
     Handlebars.registerPartial('statCard', statCardPartial);
     Handlebars.registerPartial('streaksCard', streaksCardPartial);
@@ -58,9 +31,8 @@ export class DashboardView {
     Handlebars.registerPartial('transactionsCard', transactionsCardPartial);
   }
 
-  public setStats(stats: StatsResult, options: FilterOptions): void {
+  public setStats(stats: StatsResult): void {
     this.stats = stats;
-    this.options = options;
   }
 
   private formatCurrency(value: number, currency: string = 'USD'): string {
@@ -119,7 +91,7 @@ export class DashboardView {
       winRateText: `${overall.winRate.toFixed(2)}%`,
       winLossText: `${this.formatNumber(overall.wins)}W / ${this.formatNumber(overall.losses)}L / ${this.formatNumber(overall.pushes)}P`,
       maxMultiplierText: `${overall.maxMultiplier.toFixed(2)}x`,
-      maxMultiplierGame: overall.maxMultiplierBet?.gameName,
+      maxMultiplierGame: overall.maxMultiplierBet?.gameName || 'N/A',
       streaks: {
         current: `${streaks.currentStreak.count} ${streaks.currentStreak.type}${streaks.currentStreak.count !== 1 ? 's' : ''}`,
         currentClass:
@@ -199,12 +171,12 @@ export class DashboardView {
       if (this.backButtonHandler) {
         backBtn.removeEventListener('click', this.backButtonHandler);
       }
-      
+
       // Create and store new handler
       this.backButtonHandler = () => {
         this.onBack();
       };
-      
+
       backBtn.addEventListener('click', this.backButtonHandler);
     }
   }

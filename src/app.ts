@@ -1,4 +1,4 @@
-import type { StatsResult, FilterOptions } from './types';
+import type { FilterOptions } from './types';
 import { UploadView } from './views/upload';
 import { DashboardView } from './views/dashboard';
 
@@ -7,7 +7,6 @@ export class App {
   private currentView: 'upload' | 'dashboard' = 'upload';
   private uploadView: UploadView;
   private dashboardView: DashboardView;
-  private stats: StatsResult | null = null;
   private activeWorker: Worker | null = null;
 
   constructor(container: HTMLElement) {
@@ -69,9 +68,8 @@ export class App {
         if (type === 'progress') {
           this.uploadView.updateProgress(progress);
         } else if (type === 'complete') {
-          this.stats = data;
           this.currentView = 'dashboard';
-          this.dashboardView.setStats(data, options);
+          this.dashboardView.setStats(data);
           this.render();
           worker.onmessage = null;
           worker.onerror = null;
@@ -112,7 +110,6 @@ export class App {
 
   private handleBackToUpload(): void {
     this.currentView = 'upload';
-    this.stats = null;
     this.uploadView.reset();
     this.render();
   }

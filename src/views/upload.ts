@@ -7,7 +7,8 @@ export class UploadView {
   private isProcessing = false;
   private currentProgress = 0;
   private errorMessage = '';
-  private eventListeners: Array<{ element: HTMLElement; event: string; handler: EventListener }> = [];
+  private eventListeners: Array<{ element: HTMLElement; event: string; handler: EventListener }> =
+    [];
 
   constructor(onFileProcess: (file: File, options: FilterOptions) => Promise<void>) {
     this.onFileProcess = onFileProcess;
@@ -130,7 +131,7 @@ export class UploadView {
     }
 
     if (howToModal) {
-      this.addEventListener(howToModal, 'click', (e) => {
+      this.addEventListener(howToModal, 'click', e => {
         if (e.target === howToModal) {
           howToModal.classList.add('hidden');
         }
@@ -138,11 +139,11 @@ export class UploadView {
     }
 
     this.addEventListener(fileInput, 'change', () => {
-        const file = fileInput.files?.[0];
-        if (file && fileNameDisplay) {
-          fileNameDisplay.textContent = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-        }
-      });
+      const file = fileInput.files?.[0];
+      if (file && fileNameDisplay) {
+        fileNameDisplay.textContent = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+      }
+    });
 
     if (depositFileInput) {
       this.addEventListener(depositFileInput, 'change', () => {
@@ -166,7 +167,7 @@ export class UploadView {
       });
     }
 
-    this.addEventListener(form, 'submit', async (e) => {
+    this.addEventListener(form, 'submit', async e => {
       e.preventDefault();
 
       if (this.isProcessing) return;
@@ -198,16 +199,16 @@ export class UploadView {
       }
 
       const formData = new FormData(form);
-      
+
       // Validate and parse numeric inputs
       const topRaw = formData.get('top')?.toString() || '';
       const minPlaysRaw = formData.get('minPlays')?.toString() || '';
       const topValue = parseInt(topRaw, 10);
       const minPlaysValue = parseInt(minPlaysRaw, 10);
-      
+
       const currencyRaw = formData.get('currency')?.toString();
       const gameRaw = formData.get('game')?.toString();
-      
+
       const options: FilterOptions = {
         currency: currencyRaw && currencyRaw.trim() !== '' ? currencyRaw.trim() : undefined,
         game: gameRaw && gameRaw.trim() !== '' ? gameRaw.trim() : undefined,

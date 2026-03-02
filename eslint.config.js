@@ -25,6 +25,7 @@ export default [
         Worker: 'readonly',
         MessageEvent: 'readonly',
         Event: 'readonly',
+        EventListener: 'readonly',
         CustomEvent: 'readonly',
         URL: 'readonly',
         FormData: 'readonly',

@@ -1,0 +1,16 @@
+node_modules
+.git
+.gitignore
+README.md
+TESTING.md
+src
+public
+*.config.js
+*.config.ts
+.prettierrc
+.prettierignore
+eslint.config.js
+tsconfig.json
+bun.lock
+package.json
+index.html
