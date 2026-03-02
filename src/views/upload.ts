@@ -76,7 +76,7 @@ export class UploadView {
       privacyBadge: '100% Client-Side Processing',
       privacyNotice:
         'Your data never leaves your device. Processing is done entirely in your browser.',
-      githubUrl: 'https://github.com/P-0001',
+      githubUrl: 'https://github.com/P-0001/degen-analytics',
       donateUrl: 'https://solscan.io/account/JBybLSEQPDVrueVsrh9mktEhdytoNaSBQkQbrMNHZDS7', // Replace with your crypto address
       copyright: '© 2026 Degen Analytics. All rights reserved.',
       modalTitle: 'How to Use Degen Analytics',
