@@ -31,6 +31,9 @@ export default [
         FormData: 'readonly',
         performance: 'readonly',
         self: 'readonly',
+        HTMLCanvasElement: 'readonly',
+        Bun: 'readonly',
+        process: 'readonly',
       },
     },
     plugins: {

@@ -68,14 +68,25 @@ export class App {
         if (type === 'progress') {
           this.uploadView.updateProgress(progress);
         } else if (type === 'complete') {
-          this.currentView = 'dashboard';
-          this.dashboardView.setStats(data);
-          this.render();
-          worker.onmessage = null;
-          worker.onerror = null;
-          worker.terminate();
-          this.activeWorker = null;
-          resolve();
+          try {
+            this.currentView = 'dashboard';
+            this.dashboardView.setStats(data);
+            this.render();
+            worker.onmessage = null;
+            worker.onerror = null;
+            worker.terminate();
+            this.activeWorker = null;
+            resolve();
+          } catch (renderError) {
+            this.currentView = 'upload';
+            const message = renderError instanceof Error ? renderError.message : 'Rendering failed';
+            this.uploadView.showError(`Failed to display results: ${message}`);
+            worker.onmessage = null;
+            worker.onerror = null;
+            worker.terminate();
+            this.activeWorker = null;
+            reject(renderError);
+          }
         } else if (type === 'error') {
           this.uploadView.showError(error);
           worker.onmessage = null;
@@ -109,6 +120,7 @@ export class App {
   }
 
   private handleBackToUpload(): void {
+    this.dashboardView.destroy();
     this.currentView = 'upload';
     this.uploadView.reset();
     this.render();

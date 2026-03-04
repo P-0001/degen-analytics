@@ -25,7 +25,7 @@ interface RawBetRecord {
   complete: boolean;
 }
 
-function parseCSVLine(line: string): string[] {
+export function parseCSVLine(line: string): string[] {
   const out: string[] = [];
   let cur = '';
   let inQuotes = false;
@@ -63,7 +63,7 @@ function parseCSVLine(line: string): string[] {
   return out.map(field => field.trim());
 }
 
-function parseCSV(text: string): RawBetRecord[] {
+export function parseCSV(text: string): RawBetRecord[] {
   const lines = text
     .split(/\r?\n/)
     .map(l => l.trimEnd())
@@ -150,7 +150,7 @@ interface RawTransactionRecord {
   updated_at: string;
 }
 
-function parseTransactionCSV(text: string): RawTransactionRecord[] {
+export function parseTransactionCSV(text: string): RawTransactionRecord[] {
   const lines = text
     .split(/\r?\n/)
     .map(l => l.trimEnd())
@@ -207,7 +207,7 @@ function parseTransactionCSV(text: string): RawTransactionRecord[] {
   return records;
 }
 
-function normalizeTransaction(raw: RawTransactionRecord): TransactionRecord | null {
+export function normalizeTransaction(raw: RawTransactionRecord): TransactionRecord | null {
   try {
     const amount = parseFloat(raw.amount);
 
@@ -241,7 +241,7 @@ function normalizeTransaction(raw: RawTransactionRecord): TransactionRecord | nu
   }
 }
 
-function computeTransactionStats(
+export function computeTransactionStats(
   transactions: TransactionRecord[],
   currency?: string
 ): TransactionStats {
@@ -275,7 +275,7 @@ function computeTransactionStats(
   };
 }
 
-function normalizeBet(raw: RawBetRecord): BetRecord | null {
+export function normalizeBet(raw: RawBetRecord): BetRecord | null {
   try {
     const betAmount =
       typeof raw.bet_amount === 'string' ? parseFloat(raw.bet_amount) : raw.bet_amount;
@@ -307,7 +307,7 @@ function normalizeBet(raw: RawBetRecord): BetRecord | null {
   }
 }
 
-function computeStats(
+export function computeStats(
   bets: BetRecord[],
   options: FilterOptions,
   transactionStats?: TransactionStats
@@ -332,6 +332,17 @@ function computeStats(
         ? `No bets found matching your filters. ${options.currency ? `Currency: ${options.currency}` : ''} ${options.game ? `Game: ${options.game}` : ''}`
         : 'No valid bets found in the uploaded file. Please check your CSV format.'
     );
+  }
+
+  const sortedForCurve = [...filtered].sort((a, b) => a.time.getTime() - b.time.getTime());
+  const equityCurve: { time: number; value: number }[] = [];
+  let cumulativeNet = 0;
+  for (const bet of sortedForCurve) {
+    cumulativeNet += bet.payout - bet.betAmount;
+    equityCurve.push({
+      time: bet.time.getTime(),
+      value: Math.round(cumulativeNet * 100) / 100,
+    });
   }
 
   const gameMap = new Map<string, GameStats>();
@@ -543,6 +554,7 @@ function computeStats(
     games,
     providers,
     streaks,
+    equityCurve,
     invalidRecords: bets.length - filtered.length,
     processingTime,
   };

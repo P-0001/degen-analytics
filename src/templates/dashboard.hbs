@@ -25,6 +25,44 @@
       {{> statCard label="Max Multiplier" value=maxMultiplierText subtitle=maxMultiplierGame icon="star"}}
     </div>
 
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 animate-slide-up">
+      <div class="card p-4">
+        <div class="text-xs uppercase tracking-wide text-slate-400">Avg Bet</div>
+        <div class="text-lg font-semibold text-slate-100 mt-1">{{avgBet}}</div>
+      </div>
+      <div class="card p-4">
+        <div class="text-xs uppercase tracking-wide text-slate-400">Best Day</div>
+        <div class="text-lg font-semibold text-slate-100 mt-1">{{bestDay}}</div>
+      </div>
+      <div class="card p-4">
+        <div class="text-xs uppercase tracking-wide text-slate-400">Worst Day</div>
+        <div class="text-lg font-semibold text-slate-100 mt-1">{{worstDay}}</div>
+      </div>
+      <div class="card p-4">
+        <div class="text-xs uppercase tracking-wide text-slate-400">Max Drawdown</div>
+        <div class="text-lg font-semibold text-slate-100 mt-1">{{maxDrawdown}}</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-slide-up">
+      <div class="card p-6 lg:col-span-2">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-slate-100">Cumulative Profit</h2>
+        </div>
+        <div class="relative h-64">
+          <canvas id="equity-chart"></canvas>
+        </div>
+      </div>
+      <div class="card p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-slate-100">Outcomes</h2>
+        </div>
+        <div class="relative h-64">
+          <canvas id="outcomes-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
     <div class="overflow-x-auto mb-8 -mx-6 px-6 lg:overflow-visible">
       <div class="flex gap-6 lg:grid lg:grid-cols-3 {{#if hasTransactions}}lg:grid-cols-4{{/if}}">
         <div class="flex-shrink-0 w-72 sm:w-80 lg:w-auto">
