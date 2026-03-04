@@ -12,7 +12,18 @@ jobs:
     concurrency: deploy-group    # optional: ensure only one action runs at a time
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        
+      - name: Install dependencies
+        run: bun install
+        
+      - name: Build project
+        run: bun run build
+        
       - uses: superfly/flyctl-actions/setup-flyctl@master
+        
       - run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
