@@ -447,15 +447,16 @@ export class DashboardView {
         id: 'lineGlow',
         beforeDatasetsDraw: chart => {
           const ctx = chart.ctx;
+          if (!ctx) return;
           ctx.save();
           ctx.shadowColor = 'rgba(52, 211, 153, 0.35)';
           ctx.shadowBlur = 10;
         },
         afterDatasetsDraw: chart => {
-          chart.ctx.restore();
+          chart?.ctx?.restore();
         },
         afterDestroy: chart => {
-          chart.ctx.restore();
+          chart?.ctx?.restore();
         },
       };
 
