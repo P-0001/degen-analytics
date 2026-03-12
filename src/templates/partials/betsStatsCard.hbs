@@ -1,0 +1,38 @@
+<div class="card p-6">
+  <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+    <svg class="w-6 h-6 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+    </svg>
+    Top Bets
+  </h2>
+  <div class="table-container">
+    {{#if topBets.length}}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Game</th>
+          <th class="text-right">Bet Amount</th>
+          <th class="text-right">Payout</th>
+          <th class="text-right">Multiplier</th>
+          <th class="text-right">Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each topBets}}
+        <tr>
+          <td class="font-medium text-slate-100">{{game}}</td>
+          <td class="text-right text-slate-300">{{betAmount}}</td>
+          <td class="text-right text-accent-200">{{payout}}</td>
+          <td class="text-right text-secondary-400">{{multiplier}}</td>
+          <td class="text-right text-slate-400 text-sm">{{time}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    {{else}}
+    <div class="text-center py-8 text-slate-400">
+      <p>No bets available to display</p>
+    </div>
+    {{/if}}
+  </div>
+</div>

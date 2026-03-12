@@ -234,7 +234,7 @@ export function normalizeTransaction(raw: RawTransactionRecord): TransactionReco
       externalAmount: raw.external_amount ? parseFloat(raw.external_amount) : undefined,
       externalCurrency: raw.external_currency,
       externalTxid: raw.external_txid,
-      updatedAt: new Date(raw.updated_at),
+      updatedAt: parseDate(raw.updated_at),
     };
   } catch {
     return null;
@@ -275,6 +275,28 @@ export function computeTransactionStats(
   };
 }
 
+function replaceAll(s: string, searchValue: string, replaceValue: string) {
+  return s.split(searchValue).join(replaceValue);
+}
+
+function parseDate(value: string): Date {
+  if (typeof value !== 'string') throw new Error('Invalid timestamp Not String');
+
+  const normalized = value.includes('/') ? replaceAll(value, '/', '-') : value;
+
+  const isoLike = normalized.includes('T') ? normalized : normalized.replace(' ', 'T');
+
+  const timestamp = new Date(isoLike + (isoLike.endsWith('Z') ? '' : 'Z'));
+
+  if (!Number.isFinite(timestamp.getTime())) {
+    const d2 = new Date(value);
+    if (!Number.isFinite(d2.getTime())) throw new Error(`Invalid time: ${value}`);
+    return d2;
+  }
+
+  return timestamp;
+}
+
 export function normalizeBet(raw: RawBetRecord): BetRecord | null {
   try {
     const betAmount =
@@ -298,13 +320,29 @@ export function normalizeBet(raw: RawBetRecord): BetRecord | null {
       payout,
       multiplier: raw.multiplier || 0,
       currency: raw.currency || 'USD',
-      time: new Date(raw.time),
+      time: parseDate(raw.time),
       rollback: raw.rollback || false,
       complete: raw.complete !== false,
     };
   } catch {
     return null;
   }
+}
+
+function scoreBet(bet: BetRecord): number {
+  if (!bet) return 0;
+
+  const b = bet.betAmount;
+  const p = bet.payout;
+  const m = bet.multiplier;
+  if (!Number.isFinite(b) || !Number.isFinite(p) || !Number.isFinite(m)) return 0;
+
+  const net = p - b;
+  const netScore = net <= 0 ? -1 : net / 10;
+
+  const multiplierScore = Math.round((m - 1) * 100) / 100;
+
+  return netScore + multiplierScore;
 }
 
 export function computeStats(
@@ -546,6 +584,12 @@ export function computeStats(
     longestLossStreak,
   };
 
+  const topBets = [...filtered].sort((a, b) => scoreBet(b) - scoreBet(a)).slice(0, 50);
+
+  const betStats = {
+    topBets,
+  };
+
   const delta = performance.now() - startTime;
   const processingTime = Math.round(delta * 100) / 100;
 
@@ -554,32 +598,46 @@ export function computeStats(
     games,
     providers,
     streaks,
+    betStats,
     equityCurve,
     invalidRecords: bets.length - filtered.length,
     processingTime,
   };
 }
 
-self.onmessage = (e: MessageEvent) => {
+const messageDelay = async () => {
+  await new Promise(resolve => setTimeout(resolve, 0));
+};
+
+self.onmessage = async (e: MessageEvent) => {
   const { type, data } = e.data;
 
   if (type === 'process') {
     try {
       const { fileContent, options, depositContent, withdrawalContent } = data;
 
-      self.postMessage({ type: 'progress', progress: 10 });
+      self.postMessage({ type: 'progress', progress: 0 });
+      await messageDelay();
 
       const rawRecords = parseCSV(fileContent);
-
-      self.postMessage({ type: 'progress', progress: 30 });
+      self.postMessage({ type: 'progress', progress: 20 });
+      await messageDelay();
 
       const bets: BetRecord[] = [];
-      for (const raw of rawRecords) {
-        const bet = normalizeBet(raw);
+      const totalRawRecords = rawRecords.length;
+      for (let i = 0; i < rawRecords.length; i++) {
+        const bet = normalizeBet(rawRecords[i]);
         if (bet) bets.push(bet);
-      }
 
-      self.postMessage({ type: 'progress', progress: 50 });
+        const progressInterval = Math.max(100, Math.floor(totalRawRecords / 10));
+        if (i % progressInterval === 0) {
+          const progress = 20 + Math.floor((i / totalRawRecords) * 20);
+          self.postMessage({ type: 'progress', progress });
+          await messageDelay();
+        }
+      }
+      self.postMessage({ type: 'progress', progress: 40 });
+      await messageDelay();
 
       let transactionStats: TransactionStats | undefined;
       if (depositContent || withdrawalContent) {
@@ -587,6 +645,9 @@ self.onmessage = (e: MessageEvent) => {
 
         if (depositContent) {
           const rawDeposits = parseTransactionCSV(depositContent);
+          self.postMessage({ type: 'progress', progress: 50 });
+          await messageDelay();
+
           for (const raw of rawDeposits) {
             const transaction = normalizeTransaction(raw);
             if (transaction) transactions.push(transaction);
@@ -595,6 +656,9 @@ self.onmessage = (e: MessageEvent) => {
 
         if (withdrawalContent) {
           const rawWithdrawals = parseTransactionCSV(withdrawalContent);
+          self.postMessage({ type: 'progress', progress: 60 });
+          await messageDelay();
+
           for (const raw of rawWithdrawals) {
             const transaction = normalizeTransaction(raw);
             if (transaction) transactions.push(transaction);
@@ -602,11 +666,16 @@ self.onmessage = (e: MessageEvent) => {
         }
 
         transactionStats = computeTransactionStats(transactions, options.currency);
+        self.postMessage({ type: 'progress', progress: 70 });
+        await messageDelay();
+      } else {
+        self.postMessage({ type: 'progress', progress: 70 });
+        await messageDelay();
       }
 
-      self.postMessage({ type: 'progress', progress: 70 });
-
       const stats = computeStats(bets, options, transactionStats);
+      self.postMessage({ type: 'progress', progress: 95 });
+      await messageDelay();
 
       self.postMessage({ type: 'progress', progress: 100 });
       self.postMessage({ type: 'complete', data: stats });

@@ -34,6 +34,7 @@ export default [
         HTMLCanvasElement: 'readonly',
         Bun: 'readonly',
         process: 'readonly',
+        setTimeout: 'readonly',
       },
     },
     plugins: {

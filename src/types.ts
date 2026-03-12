@@ -86,6 +86,10 @@ export interface Streaks {
   longestLossStreak: number;
 }
 
+export interface BetStats {
+  topBets: BetRecord[];
+}
+
 export interface EquityPoint {
   time: number;
   value: number;
@@ -96,6 +100,7 @@ export interface StatsResult {
   games: GameStats[];
   providers: ProviderStats[];
   streaks: Streaks;
+  betStats: BetStats;
   equityCurve: EquityPoint[];
   invalidRecords: number;
   processingTime: number;

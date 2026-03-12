@@ -6,6 +6,7 @@ import streaksCardPartial from '../templates/partials/streaksCard.hbs?raw';
 import timelineCardPartial from '../templates/partials/timelineCard.hbs?raw';
 import notableBetsCardPartial from '../templates/partials/notableBetsCard.hbs?raw';
 import transactionsCardPartial from '../templates/partials/transactionsCard.hbs?raw';
+import betsStatsCardPartial from '../templates/partials/betsStatsCard.hbs?raw';
 import {
   Chart,
   type ChartOptions,
@@ -67,6 +68,7 @@ export class DashboardView {
     Handlebars.registerPartial('timelineCard', timelineCardPartial);
     Handlebars.registerPartial('notableBetsCard', notableBetsCardPartial);
     Handlebars.registerPartial('transactionsCard', transactionsCardPartial);
+    Handlebars.registerPartial('betsStatsCard', betsStatsCardPartial);
   }
 
   public setStats(stats: StatsResult): void {
@@ -107,14 +109,23 @@ export class DashboardView {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      timeZoneName: 'short',
     }).format(date);
   }
 
   public render(): string {
     if (!this.stats) return '<div>No stats available</div>';
 
-    const { overall, games, providers, streaks, invalidRecords, processingTime, equityCurve } =
-      this.stats;
+    const {
+      overall,
+      games,
+      providers,
+      streaks,
+      betStats,
+      invalidRecords,
+      processingTime,
+      equityCurve,
+    } = this.stats;
     const currency = overall.currency;
 
     const avgBetValue = overall.totalBets > 0 ? overall.totalBet / overall.totalBets : 0;
@@ -182,7 +193,6 @@ export class DashboardView {
               month: 'short',
               day: '2-digit',
               year: 'numeric',
-              timeZone: 'UTC',
             }).format(d);
             const sign = bestDayValue >= 0 ? '+' : '-';
             const amount = this.formatCurrency(Math.abs(bestDayValue), currency);
@@ -212,7 +222,6 @@ export class DashboardView {
               month: 'short',
               day: '2-digit',
               year: 'numeric',
-              timeZone: 'UTC',
             }).format(d);
             const sign = worstDayValue >= 0 ? '+' : '-';
             const amount = this.formatCurrency(Math.abs(worstDayValue), currency);
@@ -305,6 +314,14 @@ export class DashboardView {
               overall.transactions.netTransactions >= 0 ? 'text-accent-200' : 'text-red-400',
           }
         : null,
+      topBets:
+        betStats?.topBets?.map(bet => ({
+          betAmount: this.formatCurrency(bet.betAmount, currency),
+          payout: this.formatCurrency(bet.payout, currency),
+          multiplier: bet.multiplier.toFixed(2) + 'x',
+          time: this.formatDate(bet.time),
+          game: bet.gameName,
+        })) || [],
     };
 
     return template(data);
@@ -409,7 +426,6 @@ export class DashboardView {
           month: 'short',
           day: '2-digit',
           year: '2-digit',
-          timeZone: 'UTC',
         }).format(date);
       });
       const equityValues = sortedDays.map(key => dailyEquity.get(key) ?? 0);
