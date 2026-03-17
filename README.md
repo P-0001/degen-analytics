@@ -11,19 +11,23 @@ A completely remastered web application for analyzing betting statistics with a 
 
 ## ✨ Features
 
-- **Modern UI** - Built with TailwindCSS for a sleek, responsive design
+- **Modern UI** - Built with TailwindCSS and Handlebars for a sleek, responsive design
 - **Fast Processing** - Optimized algorithms with streaming parsers
 - **Comprehensive Stats** - Overall metrics, game breakdowns, provider analysis, streaks, and more
+- **Transaction Tracking** - Optional deposit and withdrawal file uploads for complete financial overview
+- **Visual Analytics** - Interactive equity curve charts powered by Chart.js
 - **Real-time Progress** - Visual feedback during data processing
-- **Flexible Filtering** - Filter by currency, game, minimum plays, and top N results
+- **Flexible Filtering** - Filter by currency, game, minimum plays, top N results, and top bets
+- **Advanced Options** - Collapsible advanced settings for power users
 
 ## 🚀 Tech Stack
 
 - **Vite** - Lightning-fast build tool and dev server
 - **TypeScript** - Type-safe development
 - **TailwindCSS** - Utility-first CSS framework
+- **Handlebars** - Templating engine for dynamic UI
+- **Chart.js** - Interactive data visualization
 - **Web Workers** - Background processing for performance
-- **Vanilla JS** - No heavy framework dependencies
 - **Vitest** - Fast unit testing with UI
 - **ESLint** - Code linting and quality checks
 - **Prettier** - Code formatting
@@ -67,23 +71,28 @@ bun run build
 
 # Preview production build
 bun run preview
+
+# Deploy to Fly.io (requires Fly.io account)
+bun run deploy
 ```
 
 ## 📊 Usage
 
 1. Open the application in your browser
 2. Upload your betting data (CSV format)
-3. Configure filters (optional):
+3. (Optional) Upload deposit and withdrawal transaction files for complete financial tracking
+4. Configure filters (optional):
    - Currency filter
    - Game name filter
    - Top N results
    - Minimum plays threshold
-4. Click "Analyze Data"
-5. View comprehensive statistics and insights
+   - Top bets to display
+5. Click "Analyze Data"
+6. View comprehensive statistics, charts, and insights
 
-## 📁 Supported File Format
+## 📁 Supported File Formats
 
-### CSV Format
+### Betting Data CSV
 ```csv
 ID,Game,Provider,Amount,Multiplier,Payout,Currency,Status,Created At,Updated At
 ```
@@ -98,6 +107,27 @@ ID,Game,Provider,Amount,Multiplier,Payout,Currency,Status,Created At,Updated At
 - `Currency` - Currency code (e.g., USD)
 - `Status` - Bet status (complete/rollback)
 - `Created At` - Timestamp
+
+### Transaction Files (Optional)
+
+**Deposit CSV:**
+```csv
+ID,Status,Type,Method,Amount,Currency,External Amount,External Currency,External Txid,Updated At
+```
+
+**Withdrawal CSV:**
+```csv
+ID,Status,Type,Method,Amount,Currency,External Amount,External Currency,External Txid,Updated At
+```
+
+**Transaction Headers:**
+- `ID` - Transaction identifier
+- `Status` - Transaction status
+- `Type` - deposit or withdrawal
+- `Method` - Payment method
+- `Amount` - Transaction amount
+- `Currency` - Currency code
+- `Updated At` - Timestamp
 
 ## 🎯 Performance
 
