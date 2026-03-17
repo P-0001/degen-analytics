@@ -5,6 +5,8 @@ import { randomUUID, randomInt } from 'crypto';
 const mb = 8 * 1000;
 const size_in_mb = 25;
 const rowsToGenerate = size_in_mb * mb;
+const oneHour = 60 * 60 * 1000;
+const twoYears = 2 * 365 * 24 * 60 * 60 * 1000;
 
 export function randomFloat(min: number, max: number): number {
   return Math.random() * (max - min) + min;
@@ -50,7 +52,7 @@ async function fileMode() {
     const payout = betAmount * multiplier;
 
     const currency = 'USD';
-    const timestamp = new Date(Date.now() - randomInt(0, 86400000)).toISOString();
+    const timestamp = new Date(Date.now() - randomInt(oneHour, twoYears)).toISOString();
     let line = `${id},${game},${provider},${betAmount},${multiplier},${payout},${currency},complete,${timestamp},${timestamp}\n`;
     bytes += line.length;
     await writer.write(line);
