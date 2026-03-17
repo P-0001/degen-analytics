@@ -111,6 +111,7 @@ export interface FilterOptions {
   game?: string;
   minPlays?: number;
   top?: number;
+  topBets?: number;
   depositFile?: File;
   withdrawalFile?: File;
 }

@@ -584,7 +584,8 @@ export function computeStats(
     longestLossStreak,
   };
 
-  const topBets = [...filtered].sort((a, b) => scoreBet(b) - scoreBet(a)).slice(0, 50);
+  const topBetsLimit = options.topBets ?? 10;
+  const topBets = [...filtered].sort((a, b) => scoreBet(b) - scoreBet(a)).slice(0, topBetsLimit);
 
   const betStats = {
     topBets,

@@ -2,6 +2,8 @@ import type { FilterOptions } from '../types';
 import Handlebars from 'handlebars';
 import uploadTemplate from '../templates/upload.hbs?raw';
 
+declare const __APP_VERSION__: string;
+
 export class UploadView {
   private onFileProcess: (file: File, options: FilterOptions) => Promise<void>;
   private isProcessing = false;
@@ -80,6 +82,7 @@ export class UploadView {
       githubUrl: 'https://github.com/P-0001/degen-analytics',
       donateUrl: 'https://solscan.io/account/JBybLSEQPDVrueVsrh9mktEhdytoNaSBQkQbrMNHZDS7', // Replace with your crypto address
       copyright: '© 2026 Degen Analytics. All rights reserved.',
+      version: __APP_VERSION__,
       modalTitle: 'How to Use Degen Analytics',
       disclaimer:
         'This tool is not affiliated with any gambling site, casino, or betting platform. Degen Analytics is purely an informational tool for personal use to help you analyze and understand your betting history. Use of this tool does not constitute financial advice, and all gambling activities should be conducted responsibly and within your means.',
@@ -203,8 +206,10 @@ export class UploadView {
       // Validate and parse numeric inputs
       const topRaw = formData.get('top')?.toString() || '';
       const minPlaysRaw = formData.get('minPlays')?.toString() || '';
+      const topBetsRaw = formData.get('topBets')?.toString() || '';
       const topValue = parseInt(topRaw, 10);
       const minPlaysValue = parseInt(minPlaysRaw, 10);
+      const topBetsValue = parseInt(topBetsRaw, 10);
 
       const currencyRaw = formData.get('currency')?.toString();
       const gameRaw = formData.get('game')?.toString();
@@ -214,6 +219,7 @@ export class UploadView {
         game: gameRaw && gameRaw.trim() !== '' ? gameRaw.trim() : undefined,
         top: !isNaN(topValue) && topValue > 0 ? topValue : 10,
         minPlays: !isNaN(minPlaysValue) && minPlaysValue >= 0 ? minPlaysValue : 20,
+        topBets: !isNaN(topBetsValue) && topBetsValue > 0 ? topBetsValue : 10,
         depositFile: depositFileInput?.files?.[0],
         withdrawalFile: withdrawalFileInput?.files?.[0],
       };

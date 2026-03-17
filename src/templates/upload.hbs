@@ -89,7 +89,7 @@
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label for="top" class="block text-sm font-medium text-slate-300 mb-2">
-                  Top Number of Results
+                  Top Number of Games
                 </label>
                 <input
                   type="number"
@@ -103,7 +103,7 @@
               </div>
               <div>
                 <label for="minPlays" class="block text-sm font-medium text-slate-300 mb-2">
-                  Min Plays
+                  Minimum Plays
                 </label>
                 <input
                   type="number"
@@ -111,6 +111,23 @@
                   name="minPlays"
                   value="20"
                   min="1"
+                  class="input"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4">
+              <div>
+                <label for="topBets" class="block text-sm font-medium text-slate-300 mb-2">
+                  Top Number of Bets
+                </label>
+                <input
+                  type="number"
+                  id="topBets"
+                  name="topBets"
+                  value="10"
+                  min="1"
+                  max="100"
                   class="input"
                 />
               </div>
@@ -224,6 +241,7 @@
       </a>
     </div>
     <p>{{copyright}}</p>
+    <p class="text-xs mt-1">Version: {{version}}</p>
   </footer>
 </div>
 
@@ -254,8 +272,9 @@
         <ul class="list-disc list-inside space-y-2 text-sm ml-4">
           <li><strong>Currency Filter:</strong> Filter bets by specific currency (e.g., USD, BTC)</li>
           <li><strong>Game Filter:</strong> Filter by game name (e.g., Dice, Blackjack)</li>
-          <li><strong>Top Number of Results:</strong> Limit how many games/providers to display (default: 10)</li>
-          <li><strong>Min Plays:</strong> Only show games/providers with minimum number of bets (default: 20)</li>
+          <li><strong>Top Number of Games:</strong> Limit how many games/providers to display (default: 10)</li>
+          <li><strong>Minimum Plays:</strong> Only show games/providers with minimum number of bets (default: 20)</li>
+          <li><strong>Top Number of Bets:</strong> Limit how many top bets to display (default: 10)</li>
           <li><strong>Deposit CSV (Optional):</strong> Upload your deposit history to track total deposits</li>
           <li><strong>Withdrawal CSV (Optional):</strong> Upload your withdrawal history to track total withdrawals</li>
         </ul>
