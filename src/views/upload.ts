@@ -195,34 +195,18 @@ export class UploadView {
       const submitBtn = document.getElementById('submit-btn');
       if (submitBtn) {
         submitBtn.setAttribute('disabled', 'true');
-        submitBtn.innerHTML = `
-          <div class="loading-spinner"></div>
-          <span>Processing...</span>
-        `;
+        submitBtn.innerHTML = `<div class="loading-spinner"></div>\n<span>Processing...</span>`;
       }
 
       const formData = new FormData(form);
+      const options = this.validateForm(formData);
 
-      // Validate and parse numeric inputs
-      const topRaw = formData.get('top')?.toString() || '';
-      const minPlaysRaw = formData.get('minPlays')?.toString() || '';
-      const topBetsRaw = formData.get('topBets')?.toString() || '';
-      const topValue = parseInt(topRaw, 10);
-      const minPlaysValue = parseInt(minPlaysRaw, 10);
-      const topBetsValue = parseInt(topBetsRaw, 10);
-
-      const currencyRaw = formData.get('currency')?.toString();
-      const gameRaw = formData.get('game')?.toString();
-
-      const options: FilterOptions = {
-        currency: currencyRaw && currencyRaw.trim() !== '' ? currencyRaw.trim() : undefined,
-        game: gameRaw && gameRaw.trim() !== '' ? gameRaw.trim() : undefined,
-        top: !isNaN(topValue) && topValue > 0 ? topValue : 10,
-        minPlays: !isNaN(minPlaysValue) && minPlaysValue >= 0 ? minPlaysValue : 20,
-        topBets: !isNaN(topBetsValue) && topBetsValue > 0 ? topBetsValue : 10,
-        depositFile: depositFileInput?.files?.[0],
-        withdrawalFile: withdrawalFileInput?.files?.[0],
-      };
+      if (depositFileInput?.files?.[0]) {
+        options.depositFile = depositFileInput.files[0];
+      }
+      if (withdrawalFileInput?.files?.[0]) {
+        options.withdrawalFile = withdrawalFileInput.files[0];
+      }
 
       try {
         await this.onFileProcess(file, options);
@@ -230,5 +214,38 @@ export class UploadView {
         console.error('Processing error:', error);
       }
     });
+  }
+
+  private validateForm(form: FormData): FilterOptions {
+    const isInt = (value: string) => !isNaN(parseInt(value)) && parseInt(value) >= 0;
+    const isInRange = (num: number, min: number, max: number) => {
+      return !isNaN(num) && num >= min && num <= max;
+    };
+    const both = (value: string | undefined, defaultValue: number, min: number, max: number) => {
+      if (value === undefined || isNaN(Number(value))) return defaultValue;
+      const num = parseInt(value);
+      if (isInt(value) && isInRange(num, min, max)) {
+        return num;
+      }
+      return defaultValue;
+    };
+
+    const top = both(form.get('top')?.toString(), 10, 1, 100);
+    const minPlays = both(form.get('minPlays')?.toString(), 20, 0, 1000);
+    const topBets = both(form.get('topBets')?.toString(), 10, 1, 100);
+    const currency = form.get('currency')?.toString();
+    const game = form.get('game')?.toString()?.trim() || undefined;
+
+    const data: FilterOptions = {
+      currency,
+      game,
+      top,
+      minPlays,
+      topBets,
+      depositFile: undefined,
+      withdrawalFile: undefined,
+    };
+
+    return data;
   }
 }

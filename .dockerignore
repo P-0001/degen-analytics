@@ -14,3 +14,4 @@ tsconfig.json
 bun.lock
 package.json
 index.html
+scripts

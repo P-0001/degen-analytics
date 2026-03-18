@@ -1,5 +1,3 @@
-import type { StatsResult } from '../types';
-import Handlebars from 'handlebars';
 import dashboardTemplate from '../templates/dashboard.hbs?raw';
 import statCardPartial from '../templates/partials/statCard.hbs?raw';
 import streaksCardPartial from '../templates/partials/streaksCard.hbs?raw';
@@ -7,6 +5,7 @@ import timelineCardPartial from '../templates/partials/timelineCard.hbs?raw';
 import notableBetsCardPartial from '../templates/partials/notableBetsCard.hbs?raw';
 import transactionsCardPartial from '../templates/partials/transactionsCard.hbs?raw';
 import betsStatsCardPartial from '../templates/partials/betsStatsCard.hbs?raw';
+import Handlebars from 'handlebars';
 import {
   Chart,
   type ChartOptions,
@@ -23,6 +22,7 @@ import {
   DoughnutController,
   ArcElement,
 } from 'chart.js';
+import type { StatsResult } from '../types';
 
 export class DashboardView {
   private stats: StatsResult | null = null;

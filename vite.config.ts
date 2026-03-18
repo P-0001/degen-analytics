@@ -7,7 +7,15 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
-    minify: 'terser'
+    minify: 'terser',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-charts': ['chart.js'],
+          'vendor-templates': ['handlebars']
+        }
+      }
+    }
   },
   worker: {
     format: 'es'

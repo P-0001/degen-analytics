@@ -1,3 +1,18 @@
+export interface RawBetRecord {
+  id: string;
+  game_name: string;
+  bet_amount: string | number;
+  currency: string;
+  currency_amount?: string | number;
+  payout: string | number;
+  currency_payout?: string | number;
+  multiplier: number;
+  time: string;
+  icon?: string;
+  rollback: boolean;
+  complete: boolean;
+}
+
 export interface BetRecord {
   id: string;
   gameName: string;
@@ -37,6 +52,19 @@ export interface ProviderStats {
   maxMultiplier: number;
   roi: number;
   winRate: number;
+}
+
+export interface RawTransactionRecord {
+  id: string;
+  status: string;
+  type: string;
+  method: string;
+  amount: string;
+  currency: string;
+  external_amount?: string;
+  external_currency?: string;
+  external_txid?: string;
+  updated_at: string;
 }
 
 export interface TransactionRecord {

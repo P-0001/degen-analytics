@@ -1,6 +1,6 @@
 {
   "name": "degen-analytics",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "module",
   "private": true,
   "scripts": {
@@ -24,6 +24,7 @@
     "@types/node": "^20.19.37",
     "@typescript-eslint/eslint-plugin": "^8.57.1",
     "@typescript-eslint/parser": "^8.57.1",
+    "@vitest/coverage-v8": "4.1.0",
     "@vitest/ui": "^4.1.0",
     "autoprefixer": "^10.4.27",
     "eslint": "^10.0.3",
