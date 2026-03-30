@@ -18,6 +18,10 @@ import {
   scoreBet,
 } from './utils';
 
+function round2(num: number): number {
+  return Math.round(num * 100) / 100;
+}
+
 export function computeStats(
   bets: BetRecord[],
   options: FilterOptions,
@@ -194,8 +198,12 @@ export function computeStats(
     }
     return {
       ...g,
-      roi,
-      winRate: g.count > 0 ? (g.wins / g.count) * 100 : 0,
+      totalBet: round2(g.totalBet),
+      totalPayout: round2(g.totalPayout),
+      net: round2(g.net),
+      maxMultiplier: round2(g.maxMultiplier),
+      roi: round2(roi),
+      winRate: round2(g.count > 0 ? (g.wins / g.count) * 100 : 0),
     };
   });
 
@@ -206,8 +214,12 @@ export function computeStats(
     }
     return {
       ...p,
-      roi,
-      winRate: p.count > 0 ? (p.wins / p.count) * 100 : 0,
+      totalBet: round2(p.totalBet),
+      totalPayout: round2(p.totalPayout),
+      net: round2(p.net),
+      maxMultiplier: round2(p.maxMultiplier),
+      roi: round2(roi),
+      winRate: round2(p.count > 0 ? (p.wins / p.count) * 100 : 0),
     };
   });
 
@@ -231,22 +243,51 @@ export function computeStats(
 
   const overall: OverallStats = {
     totalBets: filtered.length,
-    totalBet,
-    totalPayout,
-    net,
-    roi,
+    totalBet: round2(totalBet),
+    totalPayout: round2(totalPayout),
+    net: round2(net),
+    roi: round2(roi),
     wins,
     losses,
     pushes,
-    winRate,
-    maxMultiplier,
-    maxMultiplierBet,
-    maxWinBet,
-    maxLossBet,
+    winRate: round2(winRate),
+    maxMultiplier: round2(maxMultiplier),
+    maxMultiplierBet: maxMultiplierBet
+      ? {
+          ...maxMultiplierBet,
+          betAmount: round2(maxMultiplierBet.betAmount),
+          payout: round2(maxMultiplierBet.payout),
+          multiplier: round2(maxMultiplierBet.multiplier),
+        }
+      : undefined,
+    maxWinBet: maxWinBet
+      ? {
+          ...maxWinBet,
+          betAmount: round2(maxWinBet.betAmount),
+          payout: round2(maxWinBet.payout),
+          multiplier: round2(maxWinBet.multiplier),
+        }
+      : undefined,
+    maxLossBet: maxLossBet
+      ? {
+          ...maxLossBet,
+          betAmount: round2(maxLossBet.betAmount),
+          payout: round2(maxLossBet.payout),
+          multiplier: round2(maxLossBet.multiplier),
+        }
+      : undefined,
     firstBetTime,
     lastBetTime,
     currency: options.currency || filtered[0]?.currency || 'USD',
-    transactions: transactionStats,
+    transactions: transactionStats
+      ? {
+          totalDeposits: round2(transactionStats.totalDeposits),
+          totalWithdrawals: round2(transactionStats.totalWithdrawals),
+          depositCount: transactionStats.depositCount,
+          withdrawalCount: transactionStats.withdrawalCount,
+          netTransactions: round2(transactionStats.netTransactions),
+        }
+      : undefined,
   };
 
   const streaks: Streaks = {
@@ -256,7 +297,15 @@ export function computeStats(
   };
 
   const topBetsLimit = options.topBets ?? 10;
-  const topBets = [...filtered].sort((a, b) => scoreBet(b) - scoreBet(a)).slice(0, topBetsLimit);
+  const topBets = [...filtered]
+    .sort((a, b) => scoreBet(b) - scoreBet(a))
+    .slice(0, topBetsLimit)
+    .map(bet => ({
+      ...bet,
+      betAmount: round2(bet.betAmount),
+      payout: round2(bet.payout),
+      multiplier: round2(bet.multiplier),
+    }));
 
   const betStats = {
     topBets,

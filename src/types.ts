@@ -88,6 +88,22 @@ export interface TransactionStats {
   netTransactions: number;
 }
 
+export interface StatsHistoryEntry {
+  id: string;
+  time: number;
+  bets: number;
+  data: {
+    overall: OverallStats;
+    games: GameStats[];
+    providers: ProviderStats[];
+    streaks: Streaks;
+    betStats: BetStats;
+    equityCurve: EquityPoint[];
+    invalidRecords: number;
+    processingTime: number;
+  };
+}
+
 export interface OverallStats {
   totalBets: number;
   totalBet: number;

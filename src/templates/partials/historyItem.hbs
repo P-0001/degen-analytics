@@ -1,0 +1,27 @@
+<button class="w-full text-left p-4 bg-slate-900/30 hover:bg-slate-900/50 border border-slate-700 hover:border-primary-500 rounded-lg transition-all cursor-pointer group">
+  <div class="flex items-center justify-between">
+    <div class="flex-1">
+      <div class="flex items-center gap-3 mb-2">
+        <span class="text-sm text-slate-400">{{formattedDate}}</span>
+        <span class="text-xs px-2 py-1 bg-slate-700 rounded text-slate-300">{{bets}} bets</span>
+      </div>
+      <div class="flex items-center gap-4 text-sm">
+        <div>
+          <span class="text-slate-400">ROI:</span>
+          <span class="{{roiClass}} font-semibold ml-1">{{roiSign}}{{roi}}%</span>
+        </div>
+        <div>
+          <span class="text-slate-400">Net:</span>
+          <span class="{{netClass}} font-semibold ml-1">{{netSign}}{{net}} {{currency}}</span>
+        </div>
+        <div>
+          <span class="text-slate-400">Win Rate:</span>
+          <span class="text-slate-300 font-semibold ml-1">{{winRate}}%</span>
+        </div>
+      </div>
+    </div>
+    <svg class="w-5 h-5 text-slate-500 group-hover:text-primary-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+    </svg>
+  </div>
+</button>

@@ -4,6 +4,8 @@ import type {
   TransactionStats,
   RawBetRecord,
   RawTransactionRecord,
+  StatsHistoryEntry,
+  StatsResult,
 } from '../types';
 
 export function parseCSVLine(line: string): string[] {
@@ -273,12 +275,14 @@ export function computeTransactionStats(
     }
   }
 
+  const profit = totalWithdrawals - totalDeposits;
+
   return {
     totalDeposits,
     totalWithdrawals,
     depositCount,
     withdrawalCount,
-    netTransactions: totalWithdrawals - totalDeposits,
+    netTransactions: profit,
   };
 }
 
@@ -328,4 +332,76 @@ export function scoreBet(bet: BetRecord): number {
   const multiplierScore = Math.round((m - 1) * 100) / 100;
 
   return netScore + multiplierScore;
+}
+
+function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // cSpell: disable-next-line
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+const MAX_EQUITY_CURVE_POINTS = 500;
+
+function simplifyEquityCurve(
+  curve: { time: number; value: number }[],
+  maxPoints = MAX_EQUITY_CURVE_POINTS
+): { time: number; value: number }[] {
+  if (curve.length === 0) return [];
+  if (curve.length <= maxPoints) return curve;
+
+  const step = Math.ceil(curve.length / maxPoints);
+  const simplified: { time: number; value: number }[] = [];
+
+  for (let i = 0; i < curve.length; i += step) {
+    const point = curve[i];
+    if (point) {
+      simplified.push(point);
+    }
+  }
+
+  const lastPoint = curve[curve.length - 1];
+  const lastSimplified = simplified[simplified.length - 1];
+  if (lastPoint && lastSimplified && lastSimplified !== lastPoint) {
+    simplified.push(lastPoint);
+  }
+
+  return simplified;
+}
+
+export async function saveStatsHistory(stats: StatsResult): Promise<void> {
+  const { saveStatsToHistory } = await import('./historyDB');
+
+  const historyEntry: StatsHistoryEntry = {
+    id: generateUUID(),
+    time: Date.now(),
+    bets: stats.overall.totalBets,
+    data: {
+      overall: stats.overall,
+      games: stats.games,
+      providers: stats.providers,
+      streaks: stats.streaks,
+      betStats: stats.betStats,
+      equityCurve: simplifyEquityCurve(stats.equityCurve),
+      invalidRecords: stats.invalidRecords,
+      processingTime: stats.processingTime,
+    },
+  };
+
+  await saveStatsToHistory(historyEntry);
+}
+
+export async function getStatsHistory(): Promise<StatsHistoryEntry[]> {
+  const { getStatsFromHistory } = await import('./historyDB');
+  return await getStatsFromHistory();
+}
+
+export async function clearStatsHistory(): Promise<void> {
+  const { clearStatsHistory: clearDB } = await import('./historyDB');
+  await clearDB();
 }

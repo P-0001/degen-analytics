@@ -222,6 +222,25 @@
       </svg>
       <span>How to Use</span>
     </button>
+
+    <div id="history-container" class="mt-8 card p-6 hidden">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-slate-100 flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span>Analysis History</span>
+        </h3>
+        <button
+          type="button"
+          id="clear-history-btn"
+          class="text-xs text-slate-400 hover:text-red-400 transition-colors"
+        >
+          Clear All
+        </button>
+      </div>
+      <div id="history-list" class="space-y-2"></div>
+    </div>
   </div>
 
   <footer class="mt-12 pb-8 text-center text-sm text-slate-500">
@@ -245,7 +264,6 @@
   </footer>
 </div>
 
-<!-- How to Use Modal -->
 <div id="how-to-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 z-50">
   <div class="card max-w-2xl w-full max-h-[80vh] overflow-y-auto">
     <div class="sticky top-0 bg-slate-800 p-6 border-b border-slate-700 flex items-center justify-between">
@@ -260,61 +278,139 @@
       <section>
         <h3 class="text-lg font-semibold text-slate-100 mb-3">📊 Getting Started</h3>
         <ol class="list-decimal list-inside space-y-2 text-sm">
-          <li>Export your betting history as a CSV file from your gambling platform</li>
-          <li>Click the upload area or drag and drop your CSV file</li>
-          <li>Click "Analyze Data" to process your statistics</li>
+          <li><strong>Upload your betting data:</strong> Click "Choose File" or drag and drop your betting history CSV file</li>
+          <li><strong>Upload transaction files (Optional):</strong> Upload deposit and withdrawal CSV files for complete financial tracking</li>
+          <li><strong>Configure filters (Optional):</strong> Click "Advanced Options" to customize your analysis with filters</li>
+          <li><strong>Analyze:</strong> Click "Analyze Data" and watch the real-time progress bar</li>
+          <li><strong>Explore:</strong> View comprehensive statistics, charts, and insights on the dashboard</li>
         </ol>
+        <p class="text-xs text-slate-400 mt-3">
+          💡 All processing happens in your browser using Web Workers - no data is uploaded to any server
+        </p>
       </section>
 
       <section>
         <h3 class="text-lg font-semibold text-slate-100 mb-3">🔧 Advanced Options</h3>
-        <p class="text-sm mb-2">Click "Advanced Options" to customize your analysis:</p>
-        <ul class="list-disc list-inside space-y-2 text-sm ml-4">
-          <li><strong>Currency Filter:</strong> Filter bets by specific currency (e.g., USD, BTC)</li>
-          <li><strong>Game Filter:</strong> Filter by game name (e.g., Dice, Blackjack)</li>
-          <li><strong>Top Number of Games:</strong> Limit how many games/providers to display (default: 10)</li>
-          <li><strong>Minimum Plays:</strong> Only show games/providers with minimum number of bets (default: 20)</li>
-          <li><strong>Top Number of Bets:</strong> Limit how many top bets to display (default: 10)</li>
-          <li><strong>Deposit CSV (Optional):</strong> Upload your deposit history to track total deposits</li>
-          <li><strong>Withdrawal CSV (Optional):</strong> Upload your withdrawal history to track total withdrawals</li>
-        </ul>
+        <p class="text-sm mb-3">Click "Advanced Options" to customize your analysis:</p>
+        <div class="space-y-3 text-sm">
+          <div>
+            <p class="font-semibold text-slate-200">Currency Filter</p>
+            <p class="text-xs text-slate-400">Filter bets by specific currency (e.g., <code class="bg-slate-700 px-1 rounded">USD</code>, <code class="bg-slate-700 px-1 rounded">BTC</code>, <code class="bg-slate-700 px-1 rounded">EUR</code>)</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-200">Game Name Filter</p>
+            <p class="text-xs text-slate-400">Analyze only a specific game (e.g., <code class="bg-slate-700 px-1 rounded">Sweet Bonanza</code>, <code class="bg-slate-700 px-1 rounded">Dice</code>)</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-200">Top N Results</p>
+            <p class="text-xs text-slate-400">Limit the number of games/providers shown (default: 10, reduces clutter)</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-200">Minimum Plays</p>
+            <p class="text-xs text-slate-400">Only show games with minimum number of plays (default: 20, filters out noise)</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-200">Top Bets</p>
+            <p class="text-xs text-slate-400">Number of highest/lowest bets to display (default: 10)</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-200">Transaction Files (Optional)</p>
+            <p class="text-xs text-slate-400">Upload deposit and withdrawal CSVs for complete financial overview including net balance</p>
+          </div>
+        </div>
       </section>
 
       <section>
-        <h3 class="text-lg font-semibold text-slate-100 mb-3">📈 Understanding Your Stats</h3>
-        <ul class="list-disc list-inside space-y-2 text-sm ml-4">
-          <li><strong>ROI (Return on Investment):</strong> Percentage profit/loss on total wagered</li>
-          <li><strong>Win Rate:</strong> Percentage of bets that resulted in profit</li>
-          <li><strong>Net:</strong> Total profit or loss (Payout - Bet Amount)</li>
-          <li><strong>Max Multiplier:</strong> Highest multiplier achieved</li>
-          <li><strong>Streaks:</strong> Consecutive wins or losses</li>
-        </ul>
+        <h3 class="text-lg font-semibold text-slate-100 mb-3">📈 Understanding Your Statistics</h3>
+        <div class="space-y-2 text-sm">
+          <div>
+            <p class="font-semibold text-slate-200">Overall Stats</p>
+            <p class="text-xs text-slate-400">Total bets, wagered amount, profit/loss, ROI, win rate, and max multiplier</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-200">Game Breakdown</p>
+            <p class="text-xs text-slate-400">Performance metrics for each individual game you've played</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-200">Provider Analysis</p>
+            <p class="text-xs text-slate-400">Statistics grouped by game providers (e.g., Pragmatic Play, Evolution)</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-200">Streaks</p>
+            <p class="text-xs text-slate-400">Longest winning and losing streaks with dates</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-200">Equity Curve</p>
+            <p class="text-xs text-slate-400">Interactive chart showing your profit/loss over time</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-200">Top Bets</p>
+            <p class="text-xs text-slate-400">Your highest wins and biggest losses</p>
+          </div>
+          <div>
+            <p class="font-semibold text-slate-200">Transaction Summary</p>
+            <p class="text-xs text-slate-400">Total deposits, withdrawals, and net balance (if transaction files uploaded)</p>
+          </div>
+        </div>
+        <div class="mt-4 p-3 bg-slate-700/30 rounded-lg text-xs space-y-1">
+          <p><strong>ROI:</strong> Return on Investment = (Net Profit / Total Wagered) x 100%</p>
+          <p><strong>Win Rate:</strong> Percentage of bets that resulted in profit</p>
+          <p><strong>Net:</strong> Total profit or loss (Total Payout - Total Wagered)</p>
+        </div>
       </section>
 
       <section>
         <h3 class="text-lg font-semibold text-slate-100 mb-3">🔒 Privacy & Security</h3>
-        <p class="text-sm">
-          All data processing happens <strong>100% in your browser</strong>. Your betting history never leaves your device,
-          is not uploaded to any server, and is not stored anywhere. Once you close the tab, all data is gone.
+        <div class="space-y-2 text-sm">
+          <p>✅ <strong>100% Client-Side Processing</strong> - All analysis happens in your browser</p>
+          <p>✅ <strong>Zero Server Uploads</strong> - Your data never leaves your device</p>
+          <p>✅ <strong>No Tracking</strong> - No analytics, cookies, or data collection</p>
+        </div>
+        <p class="text-xs text-slate-400 mt-3 p-3 bg-slate-700/30 rounded-lg">
+          🔐 Your betting history is processed using Web Workers for optimal performance without ever touching a server.
         </p>
       </section>
 
       <section>
         <h3 class="text-lg font-semibold text-slate-100 mb-3">📋 CSV Format Requirements</h3>
-        <p class="text-sm mb-2"><strong>Betting History CSV</strong> should include these columns:</p>
-        <ul class="list-disc list-inside space-y-1 text-sm ml-4 mb-4">
-          <li>ID, Game/Game Name, Amount/Bet Amount, Payout, Multiplier, Currency, Status, Time/Created At</li>
-        </ul>
-        <p class="text-sm mb-2"><strong>Deposit CSV</strong> (optional) should include these columns:</p>
-        <ul class="list-disc list-inside space-y-1 text-sm ml-4 mb-4">
-          <li>ID, Status, Type (must be "deposit"), Method, Amount, Currency, Updated At</li>
-          <li>Only transactions with Status = "complete" will be counted</li>
-        </ul>
-        <p class="text-sm mb-2"><strong>Withdrawal CSV</strong> (optional) should include these columns:</p>
-        <ul class="list-disc list-inside space-y-1 text-sm ml-4">
-          <li>ID, Status, Type (must be "withdrawal"), Method, Amount, Currency, Updated At</li>
-          <li>Only transactions with Status = "complete" will be counted</li>
-        </ul>
+        
+        <div class="mb-4">
+          <p class="text-sm font-semibold text-slate-200 mb-2">Betting History CSV (Required)</p>
+          <div class="bg-slate-900/50 p-3 rounded text-xs font-mono overflow-x-auto mb-2">
+            <div class="text-slate-400">ID,Game,Provider,Amount,Multiplier,Payout,Currency,Status,Created At,Updated At</div>
+            <div class="text-slate-300">12345,Sweet Bonanza,Pragmatic Play,1.00,0,0,USD,complete,2024-01-15T10:30:00Z,...</div>
+            <div class="text-slate-300">12346,Gates of Olympus,Pragmatic Play,2.00,5.5,11.00,USD,complete,2024-01-15T10:31:00Z,...</div>
+          </div>
+          <ul class="list-disc list-inside space-y-1 text-xs ml-4 text-slate-400">
+            <li><strong>Required headers:</strong> ID, Game, Provider, Amount, Multiplier, Payout, Currency, Status, Created At</li>
+            <li><strong>Status:</strong> Must be "complete" or "rollback" (rollback bets are excluded)</li>
+            <li><strong>Header names are case-sensitive</strong></li>
+          </ul>
+        </div>
+
+        <div class="mb-4">
+          <p class="text-sm font-semibold text-slate-200 mb-2">Deposit CSV (Optional)</p>
+          <div class="bg-slate-900/50 p-3 rounded text-xs font-mono overflow-x-auto mb-2">
+            <div class="text-slate-400">ID,Status,Type,Method,Amount,Currency,External Amount,External Currency,External Txid,Updated At</div>
+            <div class="text-slate-300">D001,complete,deposit,crypto,100.00,USD,0.0025,BTC,tx123abc,2024-01-15T09:00:00Z</div>
+          </div>
+          <ul class="list-disc list-inside space-y-1 text-xs ml-4 text-slate-400">
+            <li><strong>Type:</strong> Must be "deposit"</li>
+            <li><strong>Status:</strong> Only "complete" transactions are counted</li>
+          </ul>
+        </div>
+
+        <div>
+          <p class="text-sm font-semibold text-slate-200 mb-2">Withdrawal CSV (Optional)</p>
+          <div class="bg-slate-900/50 p-3 rounded text-xs font-mono overflow-x-auto mb-2">
+            <div class="text-slate-400">ID,Status,Type,Method,Amount,Currency,External Amount,External Currency,External Txid,Updated At</div>
+            <div class="text-slate-300">W001,complete,withdrawal,crypto,50.00,USD,0.00125,BTC,tx456def,2024-01-15T15:00:00Z</div>
+          </div>
+          <ul class="list-disc list-inside space-y-1 text-xs ml-4 text-slate-400">
+            <li><strong>Type:</strong> Must be "withdrawal"</li>
+            <li><strong>Status:</strong> Only "complete" transactions are counted</li>
+          </ul>
+        </div>
       </section>
 
       <section class="border-t border-slate-700 pt-6">

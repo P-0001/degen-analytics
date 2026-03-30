@@ -78,56 +78,99 @@ bun run deploy
 
 ## 📊 Usage
 
-1. Open the application in your browser
-2. Upload your betting data (CSV format)
-3. (Optional) Upload deposit and withdrawal transaction files for complete financial tracking
-4. Configure filters (optional):
-   - Currency filter
-   - Game name filter
-   - Top N results
-   - Minimum plays threshold
-   - Top bets to display
-5. Click "Analyze Data"
-6. View comprehensive statistics, charts, and insights
+### Getting Started
+
+1. **Start the application:**
+   ```bash
+   bun run dev
+   ```
+   Navigate to `http://localhost:6768` in your browser
+
+2. **Upload your betting data:**
+   - Click the "Choose File" button in the main upload section
+   - Select your betting history CSV file
+   - The file is processed entirely in your browser - no data is uploaded to any server
+
+3. **Upload transaction files (Optional):**
+   - Upload deposit CSV file for deposit tracking
+   - Upload withdrawal CSV file for withdrawal tracking
+   - These files provide a complete financial overview including deposits and withdrawals
+
+4. **Configure analysis filters (Optional):**
+   - **Currency Filter**: Enter a currency code (e.g., `USD`, `BTC`) to analyze only bets in that currency
+   - **Game Name Filter**: Enter a game name to analyze only that specific game
+   - **Top N Results**: Limit the number of games/providers shown (e.g., top 10)
+   - **Minimum Plays**: Set a threshold to exclude games with few plays (reduces noise)
+   - **Top Bets**: Number of highest/lowest bets to display in the dashboard
+
+5. **Analyze your data:**
+   - Click the "Analyze Data" button
+   - Watch the real-time progress bar as your data is processed
+   - Processing happens in a Web Worker for optimal performance
+
+6. **Explore your statistics:**
+   - **Overall Stats**: Total bets, wagered amount, profit/loss, ROI, win rate
+   - **Game Breakdown**: Performance by individual games
+   - **Provider Analysis**: Performance by game providers
+   - **Streaks**: Longest winning/losing streaks
+   - **Equity Curve**: Visual chart showing profit/loss over time
+   - **Top Bets**: Highest wins and losses
+   - **Transaction Summary**: Deposits, withdrawals, and net balance (if transaction files uploaded)
 
 ## 📁 Supported File Formats
 
-### Betting Data CSV
+### Betting Data CSV (Required)
+
+**Example Format:**
 ```csv
 ID,Game,Provider,Amount,Multiplier,Payout,Currency,Status,Created At,Updated At
+12345,Sweet Bonanza,Pragmatic Play,1.00,0,0,USD,complete,2024-01-15T10:30:00Z,2024-01-15T10:30:05Z
+12346,Gates of Olympus,Pragmatic Play,2.00,5.5,11.00,USD,complete,2024-01-15T10:31:00Z,2024-01-15T10:31:05Z
 ```
 
 **Required Headers:**
-- `ID` - Unique bet identifier
-- `Game` - Game name
-- `Provider` - Game provider
-- `Amount` - Bet amount
-- `Multiplier` - Win multiplier
-- `Payout` - Payout amount
-- `Currency` - Currency code (e.g., USD)
-- `Status` - Bet status (complete/rollback)
-- `Created At` - Timestamp
+- `ID` - Unique bet identifier (string/number)
+- `Game` - Game name (string)
+- `Provider` - Game provider name (string)
+- `Amount` - Bet amount (number, e.g., 1.00)
+- `Multiplier` - Win multiplier (number, 0 for losses)
+- `Payout` - Total payout amount (number, 0 for losses)
+- `Currency` - Currency code (string, e.g., USD, BTC, EUR)
+- `Status` - Bet status (string: "complete" or "rollback")
+- `Created At` - Bet timestamp (ISO 8601 format recommended)
+
+**Notes:**
+- Header names are case-sensitive
+- Rollback bets are excluded from analysis
+- Timestamps should be in ISO 8601 format for best results
 
 ### Transaction Files (Optional)
 
-**Deposit CSV:**
+**Deposit CSV Example:**
 ```csv
 ID,Status,Type,Method,Amount,Currency,External Amount,External Currency,External Txid,Updated At
+D001,complete,deposit,crypto,100.00,USD,0.0025,BTC,tx123abc,2024-01-15T09:00:00Z
 ```
 
-**Withdrawal CSV:**
+**Withdrawal CSV Example:**
 ```csv
 ID,Status,Type,Method,Amount,Currency,External Amount,External Currency,External Txid,Updated At
+W001,complete,withdrawal,crypto,50.00,USD,0.00125,BTC,tx456def,2024-01-15T15:00:00Z
 ```
 
 **Transaction Headers:**
-- `ID` - Transaction identifier
-- `Status` - Transaction status
-- `Type` - deposit or withdrawal
-- `Method` - Payment method
-- `Amount` - Transaction amount
-- `Currency` - Currency code
-- `Updated At` - Timestamp
+- `ID` - Transaction identifier (string/number)
+- `Status` - Transaction status (string, e.g., "complete", "pending")
+- `Type` - Transaction type (string: "deposit" or "withdrawal")
+- `Method` - Payment method (string, e.g., "crypto", "card")
+- `Amount` - Transaction amount (number)
+- `Currency` - Currency code (string)
+- `Updated At` - Transaction timestamp (ISO 8601 format)
+
+**Notes:**
+- Only "complete" transactions are included in analysis
+- External Amount/Currency/Txid fields are optional
+- Transaction files enable full financial tracking including deposits and withdrawals
 
 ## 🎯 Performance
 

@@ -35,6 +35,13 @@ export default [
         Bun: 'readonly',
         process: 'readonly',
         setTimeout: 'readonly',
+        confirm: 'readonly',
+        HTMLButtonElement: 'readonly',
+        crypto: 'readonly',
+        IDBDatabase: 'readonly',
+        indexedDB: 'readonly',
+        IDBOpenDBRequest: 'readonly',
+        IDBRequest: 'readonly',
       },
     },
     plugins: {

@@ -1,19 +1,25 @@
-import type { FilterOptions } from '../types';
+import type { FilterOptions, StatsHistoryEntry } from '../types';
 import Handlebars from 'handlebars';
 import uploadTemplate from '../templates/upload.hbs?raw';
+import { getStatsHistory, clearStatsHistory } from '../worker/utils';
 
 declare const __APP_VERSION__: string;
 
 export class UploadView {
   private onFileProcess: (file: File, options: FilterOptions) => Promise<void>;
+  private onLoadHistory: (historyEntry: StatsHistoryEntry) => void;
   private isProcessing = false;
   private currentProgress = 0;
   private errorMessage = '';
   private eventListeners: Array<{ element: HTMLElement; event: string; handler: EventListener }> =
     [];
 
-  constructor(onFileProcess: (file: File, options: FilterOptions) => Promise<void>) {
+  constructor(
+    onFileProcess: (file: File, options: FilterOptions) => Promise<void>,
+    onLoadHistory: (historyEntry: StatsHistoryEntry) => void
+  ) {
     this.onFileProcess = onFileProcess;
+    this.onLoadHistory = onLoadHistory;
   }
 
   get progress(): number {
@@ -80,7 +86,7 @@ export class UploadView {
       privacyNotice:
         'Your data never leaves your device. Processing is done entirely in your browser.',
       githubUrl: 'https://github.com/P-0001/degen-analytics',
-      donateUrl: 'https://solscan.io/account/JBybLSEQPDVrueVsrh9mktEhdytoNaSBQkQbrMNHZDS7', // Replace with your crypto address
+      donateUrl: 'https://solscan.io/account/EktY9cMcPmP2cwqVWMVycFs3epSZ5R98GUw235ReCjZ4',
       copyright: '© 2026 Degen Analytics. All rights reserved.',
       version: __APP_VERSION__,
       modalTitle: 'How to Use Degen Analytics',
@@ -93,6 +99,7 @@ export class UploadView {
 
   public attachEventListeners(): void {
     this.removeEventListeners();
+    this.renderHistory();
 
     const form = document.getElementById('upload-form') as HTMLFormElement;
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
@@ -214,6 +221,85 @@ export class UploadView {
         console.error('Processing error:', error);
       }
     });
+
+    const clearHistoryBtn = document.getElementById('clear-history-btn');
+    if (clearHistoryBtn) {
+      this.addEventListener(clearHistoryBtn, 'click', async () => {
+        if (confirm('Are you sure you want to clear all analysis history?')) {
+          await clearStatsHistory();
+          await this.renderHistory();
+        }
+      });
+    }
+  }
+
+  private async renderHistory(): Promise<void> {
+    try {
+      const history = await getStatsHistory();
+      const historyContainer = document.getElementById('history-container');
+      const historyList = document.getElementById('history-list');
+
+      if (!historyContainer || !historyList) return;
+
+      if (history.length === 0) {
+        historyContainer.classList.add('hidden');
+        return;
+      }
+
+      historyContainer.classList.remove('hidden');
+      historyList.innerHTML = '';
+
+      const sortedHistory = [...history].sort((a, b) => b.time - a.time);
+
+      for (const entry of sortedHistory) {
+        const date = new Date(entry.time);
+        const formattedDate = date.toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+
+        const roi = entry.data.overall.roi;
+        const net = entry.data.overall.net;
+        const roiClass = roi >= 0 ? 'text-green-400' : 'text-red-400';
+        const roiSign = roi >= 0 ? '+' : '';
+        const netClass = net >= 0 ? 'text-green-400' : 'text-red-400';
+        const netSign = net >= 0 ? '+' : '';
+
+        const historyItemTemplate = Handlebars.compile('{{> historyItem}}');
+        const historyItemHtml = historyItemTemplate({
+          formattedDate,
+          bets: entry.bets.toLocaleString(),
+          roiClass,
+          roiSign,
+          roi: roi.toFixed(2),
+          netClass,
+          netSign,
+          net: Math.abs(net).toFixed(2),
+          currency: entry.data.overall.currency,
+          winRate: entry.data.overall.winRate.toFixed(2),
+        });
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = historyItemHtml;
+        const historyItem = tempDiv.firstElementChild as HTMLButtonElement;
+
+        const clickHandler = () => {
+          this.onLoadHistory(entry);
+        };
+        this.addEventListener(historyItem, 'click', clickHandler);
+
+        historyList.appendChild(historyItem);
+      }
+    } catch (error) {
+      console.error('Failed to render history:', error);
+      const historyContainer = document.getElementById('history-container');
+      if (historyContainer) {
+        historyContainer.classList.add('hidden');
+      }
+    }
   }
 
   private validateForm(form: FormData): FilterOptions {

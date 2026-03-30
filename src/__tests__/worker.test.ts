@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import type { BetRecord, TransactionRecord } from '../types';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { BetRecord, TransactionRecord, StatsHistoryEntry } from '../types';
 import {
   parseCSVLine,
   parseCSV,
@@ -8,9 +8,31 @@ import {
   normalizeTransaction,
   computeTransactionStats,
   scoreBet,
+  saveStatsHistory,
+  getStatsHistory,
+  clearStatsHistory,
 } from '../worker/utils';
 import { computeStats } from '../worker/stats.worker';
 import { genRandomCSVData } from '../../scripts/gen';
+
+vi.mock('../worker/historyDB', () => {
+  let mockHistory: StatsHistoryEntry[] = [];
+
+  return {
+    saveStatsToHistory: vi.fn(async (entry: StatsHistoryEntry) => {
+      mockHistory.push(entry);
+      if (mockHistory.length > 20) {
+        mockHistory = mockHistory.slice(-20);
+      }
+    }),
+    getStatsFromHistory: vi.fn(async () => {
+      return [...mockHistory];
+    }),
+    clearStatsHistory: vi.fn(async () => {
+      mockHistory = [];
+    }),
+  };
+});
 
 describe('CSV Line Parser', () => {
   describe('Basic Parsing', () => {
@@ -71,6 +93,15 @@ describe('CSV Line Parser', () => {
 
     it('should handle complex nested quotes', () => {
       expect(parseCSVLine('"a""b""c",d')).toEqual(['a"b"c', 'd']);
+    });
+
+    it('should throw error for unclosed quotes', () => {
+      expect(() => parseCSVLine('"unclosed quote,field')).toThrow(
+        'Malformed CSV: unclosed quote in line'
+      );
+      expect(() => parseCSVLine('field,"another unclosed')).toThrow(
+        'Malformed CSV: unclosed quote in line'
+      );
     });
   });
 });
@@ -197,6 +228,17 @@ describe('Bet CSV Parser', () => {
         'id,game name,provider,bet amount,payout,multiplier,currency,status,created at\r\n1,Game,Provider,10,20,2,USD,complete,2024-01-01T00:00:00Z';
       const records = parseCSV(csv);
       expect(records).toHaveLength(1);
+    });
+
+    it('should skip lines with unclosed quotes', () => {
+      const csv = `id,game name,provider,bet amount,payout,multiplier,currency,status,created at
+1,Game,Provider,10,20,2,USD,complete,2024-01-01T00:00:00Z
+2,"Unclosed,Provider,10,20,2,USD,complete,2024-01-01T00:01:00Z
+3,Game,Provider,10,20,2,USD,complete,2024-01-01T00:02:00Z`;
+      const records = parseCSV(csv);
+      expect(records).toHaveLength(2);
+      expect(records[0].id).toBe('1');
+      expect(records[1].id).toBe('3');
     });
   });
 });
@@ -1337,6 +1379,222 @@ describe('Bet Scoring', () => {
 
       const score = scoreBet(bet);
       expect(score).toBe(-2);
+    });
+  });
+});
+
+describe('Stats History Functions', () => {
+  beforeEach(async () => {
+    await clearStatsHistory();
+  });
+
+  afterEach(async () => {
+    await clearStatsHistory();
+  });
+
+  describe('saveStatsHistory', () => {
+    it('should save stats to history', async () => {
+      const stats = {
+        overall: {
+          totalBets: 10,
+          totalBet: 100,
+          totalPayout: 120,
+          net: 20,
+          roi: 20,
+          wins: 6,
+          losses: 4,
+          pushes: 0,
+          winRate: 60,
+          maxMultiplier: 5,
+          currency: 'USD',
+        },
+        games: [],
+        providers: [],
+        streaks: {
+          currentStreak: { type: 'win' as const, count: 2 },
+          longestWinStreak: 3,
+          longestLossStreak: 2,
+        },
+        betStats: { topBets: [] },
+        equityCurve: [{ time: Date.now(), value: 20 }],
+        invalidRecords: 0,
+        processingTime: 10.5,
+      };
+
+      await saveStatsHistory(stats);
+      const history = await getStatsHistory();
+
+      expect(history.length).toBe(1);
+      expect(history[0].bets).toBe(10);
+      expect(history[0].data.overall.totalBets).toBe(10);
+    });
+
+    it('should simplify equity curve when saving', async () => {
+      const largeEquityCurve = Array.from({ length: 1000 }, (_, i) => ({
+        time: Date.now() + i * 1000,
+        value: i * 10,
+      }));
+
+      const stats = {
+        overall: {
+          totalBets: 1000,
+          totalBet: 10000,
+          totalPayout: 11000,
+          net: 1000,
+          roi: 10,
+          wins: 600,
+          losses: 400,
+          pushes: 0,
+          winRate: 60,
+          maxMultiplier: 10,
+          currency: 'USD',
+        },
+        games: [],
+        providers: [],
+        streaks: {
+          currentStreak: { type: 'win' as const, count: 2 },
+          longestWinStreak: 5,
+          longestLossStreak: 3,
+        },
+        betStats: { topBets: [] },
+        equityCurve: largeEquityCurve,
+        invalidRecords: 0,
+        processingTime: 50,
+      };
+
+      await saveStatsHistory(stats);
+      const history = await getStatsHistory();
+
+      expect(history.length).toBe(1);
+      expect(history[0].data.equityCurve.length).toBeLessThanOrEqual(501);
+      expect(history[0].data.equityCurve.length).toBeGreaterThan(0);
+      expect(history[0].data.equityCurve[0].time).toBe(largeEquityCurve[0].time);
+      expect(history[0].data.equityCurve[history[0].data.equityCurve.length - 1].time).toBe(
+        largeEquityCurve[largeEquityCurve.length - 1].time
+      );
+    });
+
+    it('should maintain max 20 entries', async () => {
+      for (let i = 0; i < 25; i++) {
+        const stats = {
+          overall: {
+            totalBets: i + 1,
+            totalBet: (i + 1) * 10,
+            totalPayout: (i + 1) * 12,
+            net: (i + 1) * 2,
+            roi: 20,
+            wins: i + 1,
+            losses: 0,
+            pushes: 0,
+            winRate: 100,
+            maxMultiplier: 2,
+            currency: 'USD',
+          },
+          games: [],
+          providers: [],
+          streaks: {
+            currentStreak: { type: 'win' as const, count: i + 1 },
+            longestWinStreak: i + 1,
+            longestLossStreak: 0,
+          },
+          betStats: { topBets: [] },
+          equityCurve: [{ time: Date.now() + i * 1000, value: (i + 1) * 2 }],
+          invalidRecords: 0,
+          processingTime: 5,
+        };
+        await saveStatsHistory(stats);
+      }
+
+      const history = await getStatsHistory();
+      expect(history.length).toBeLessThanOrEqual(20);
+    });
+  });
+
+  describe('getStatsHistory', () => {
+    it('should return empty array when no history exists', async () => {
+      const history = await getStatsHistory();
+      expect(history).toEqual([]);
+    });
+
+    it('should retrieve all saved history entries', async () => {
+      const stats1 = {
+        overall: {
+          totalBets: 5,
+          totalBet: 50,
+          totalPayout: 60,
+          net: 10,
+          roi: 20,
+          wins: 3,
+          losses: 2,
+          pushes: 0,
+          winRate: 60,
+          maxMultiplier: 3,
+          currency: 'USD',
+        },
+        games: [],
+        providers: [],
+        streaks: {
+          currentStreak: { type: 'win' as const, count: 1 },
+          longestWinStreak: 2,
+          longestLossStreak: 1,
+        },
+        betStats: { topBets: [] },
+        equityCurve: [{ time: Date.now(), value: 10 }],
+        invalidRecords: 0,
+        processingTime: 5,
+      };
+
+      const stats2 = {
+        ...stats1,
+        overall: { ...stats1.overall, totalBets: 10 },
+      };
+
+      await saveStatsHistory(stats1);
+      await saveStatsHistory(stats2);
+
+      const history = await getStatsHistory();
+      expect(history.length).toBe(2);
+    });
+  });
+
+  describe('clearStatsHistory', () => {
+    it('should clear all history entries', async () => {
+      const stats = {
+        overall: {
+          totalBets: 5,
+          totalBet: 50,
+          totalPayout: 60,
+          net: 10,
+          roi: 20,
+          wins: 3,
+          losses: 2,
+          pushes: 0,
+          winRate: 60,
+          maxMultiplier: 3,
+          currency: 'USD',
+        },
+        games: [],
+        providers: [],
+        streaks: {
+          currentStreak: { type: 'win' as const, count: 1 },
+          longestWinStreak: 2,
+          longestLossStreak: 1,
+        },
+        betStats: { topBets: [] },
+        equityCurve: [{ time: Date.now(), value: 10 }],
+        invalidRecords: 0,
+        processingTime: 5,
+      };
+
+      await saveStatsHistory(stats);
+      await saveStatsHistory(stats);
+
+      let history = await getStatsHistory();
+      expect(history.length).toBe(2);
+
+      await clearStatsHistory();
+      history = await getStatsHistory();
+      expect(history).toEqual([]);
     });
   });
 });

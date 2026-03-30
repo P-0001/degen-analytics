@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite';
 import packageJson from './package.json';
+import { minifyHBSPlugin } from './scripts/vite-plugin-minify-hbs';
 
 export default defineConfig({
+  plugins: [minifyHBSPlugin()],
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version)
   },

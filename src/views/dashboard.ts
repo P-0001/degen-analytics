@@ -5,6 +5,8 @@ import timelineCardPartial from '../templates/partials/timelineCard.hbs?raw';
 import notableBetsCardPartial from '../templates/partials/notableBetsCard.hbs?raw';
 import transactionsCardPartial from '../templates/partials/transactionsCard.hbs?raw';
 import betsStatsCardPartial from '../templates/partials/betsStatsCard.hbs?raw';
+import historyItemPartial from '../templates/partials/historyItem.hbs?raw';
+
 import Handlebars from 'handlebars';
 import {
   Chart,
@@ -69,6 +71,7 @@ export class DashboardView {
     Handlebars.registerPartial('notableBetsCard', notableBetsCardPartial);
     Handlebars.registerPartial('transactionsCard', transactionsCardPartial);
     Handlebars.registerPartial('betsStatsCard', betsStatsCardPartial);
+    Handlebars.registerPartial('historyItem', historyItemPartial);
   }
 
   public setStats(stats: StatsResult): void {
@@ -111,6 +114,44 @@ export class DashboardView {
       minute: '2-digit',
       timeZoneName: 'short',
     }).format(date);
+  }
+
+  private getProfitClass(value: number): string {
+    return value >= 0 ? 'text-accent-200' : 'text-red-400';
+  }
+
+  private formatStatsRow(
+    stats: {
+      count: number;
+      totalBet: number;
+      net: number;
+      roi: number;
+      winRate: number;
+      maxMultiplier: number;
+    },
+    currency: string
+  ) {
+    return {
+      count: this.formatNumber(stats.count),
+      wagered: this.formatCurrency(stats.totalBet, currency),
+      net: this.formatCurrency(stats.net, currency),
+      netClass: this.getProfitClass(stats.net),
+      roi: this.formatPercent(stats.roi),
+      roiClass: this.getProfitClass(stats.roi),
+      winRate: `${stats.winRate.toFixed(1)}%`,
+      maxMultiplier: `${stats.maxMultiplier.toFixed(2)}x`,
+    };
+  }
+
+  private formatNotableBet(
+    bet: { payout: number; betAmount: number; gameName: string } | undefined,
+    currency: string
+  ) {
+    if (!bet) return null;
+    return {
+      amount: this.formatCurrency(bet.payout - bet.betAmount, currency),
+      game: bet.gameName,
+    };
   }
 
   public render(): string {
@@ -237,7 +278,7 @@ export class DashboardView {
       invalidRecords: invalidRecords > 0 ? invalidRecords : null,
       totalWagered: this.formatCurrency(overall.totalBet, currency),
       netProfit: this.formatCurrency(overall.net, currency),
-      netClass: overall.net >= 0 ? 'text-accent-200' : 'text-red-400',
+      netClass: this.getProfitClass(overall.net),
       roiText: `${this.formatPercent(overall.roi)} ROI`,
       winRateText: `${overall.winRate.toFixed(2)}%`,
       winLossText: `${this.formatNumber(overall.wins)}W / ${this.formatNumber(overall.losses)}L / ${this.formatNumber(overall.pushes)}P`,
@@ -260,47 +301,14 @@ export class DashboardView {
       },
       firstBet: this.formatDate(overall.firstBetTime),
       lastBet: this.formatDate(overall.lastBetTime),
-      maxWin: overall.maxWinBet
-        ? {
-            amount: this.formatCurrency(
-              overall.maxWinBet.payout - overall.maxWinBet.betAmount,
-              currency
-            ),
-            game: overall.maxWinBet.gameName,
-          }
-        : null,
-      maxLoss: overall.maxLossBet
-        ? {
-            amount: this.formatCurrency(
-              overall.maxLossBet.payout - overall.maxLossBet.betAmount,
-              currency
-            ),
-            game: overall.maxLossBet.gameName,
-          }
-        : null,
+      maxWin: this.formatNotableBet(overall.maxWinBet, currency),
+      maxLoss: this.formatNotableBet(overall.maxLossBet, currency),
       hasGames: games.length > 0,
-      games: games.map(g => ({
-        gameName: g.gameName,
-        count: this.formatNumber(g.count),
-        wagered: this.formatCurrency(g.totalBet, currency),
-        net: this.formatCurrency(g.net, currency),
-        netClass: g.net >= 0 ? 'text-accent-200' : 'text-red-400',
-        roi: this.formatPercent(g.roi),
-        roiClass: g.roi >= 0 ? 'text-accent-200' : 'text-red-400',
-        winRate: `${g.winRate.toFixed(1)}%`,
-        maxMultiplier: `${g.maxMultiplier.toFixed(2)}x`,
-      })),
+      games: games.map(g => ({ gameName: g.gameName, ...this.formatStatsRow(g, currency) })),
       hasProviders: providers.length > 0,
       providers: providers.map(p => ({
         provider: p.provider,
-        count: this.formatNumber(p.count),
-        wagered: this.formatCurrency(p.totalBet, currency),
-        net: this.formatCurrency(p.net, currency),
-        netClass: p.net >= 0 ? 'text-accent-200' : 'text-red-400',
-        roi: this.formatPercent(p.roi),
-        roiClass: p.roi >= 0 ? 'text-accent-200' : 'text-red-400',
-        winRate: `${p.winRate.toFixed(1)}%`,
-        maxMultiplier: `${p.maxMultiplier.toFixed(2)}x`,
+        ...this.formatStatsRow(p, currency),
       })),
       hasTransactions: overall.transactions !== undefined,
       transactions: overall.transactions
@@ -310,15 +318,14 @@ export class DashboardView {
             depositCount: this.formatNumber(overall.transactions.depositCount),
             withdrawalCount: this.formatNumber(overall.transactions.withdrawalCount),
             netTransactions: this.formatCurrency(overall.transactions.netTransactions, currency),
-            netClass:
-              overall.transactions.netTransactions >= 0 ? 'text-accent-200' : 'text-red-400',
+            netClass: this.getProfitClass(overall.transactions.netTransactions),
           }
         : null,
       topBets:
         betStats?.topBets?.map(bet => ({
           betAmount: this.formatCurrency(bet.betAmount, currency),
           payout: this.formatCurrency(bet.payout, currency),
-          multiplier: bet.multiplier.toFixed(2) + 'x',
+          multiplier: `${bet.multiplier.toFixed(2)}x`,
           time: this.formatDate(bet.time),
           game: bet.gameName,
         })) || [],

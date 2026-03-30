@@ -1,6 +1,7 @@
-import type { FilterOptions } from './types';
+import type { FilterOptions, StatsHistoryEntry, StatsResult } from './types';
 import { UploadView } from './views/upload';
 import { DashboardView } from './views/dashboard';
+import { saveStatsHistory } from './worker/utils';
 
 export class App {
   private container: HTMLElement;
@@ -11,7 +12,10 @@ export class App {
 
   constructor(container: HTMLElement) {
     this.container = container;
-    this.uploadView = new UploadView(this.handleFileProcess.bind(this));
+    this.uploadView = new UploadView(
+      this.handleFileProcess.bind(this),
+      this.handleLoadHistory.bind(this)
+    );
     this.dashboardView = new DashboardView(this.handleBackToUpload.bind(this));
   }
 
@@ -62,13 +66,16 @@ export class App {
     this.activeWorker = worker;
 
     return new Promise((resolve, reject) => {
-      worker.onmessage = e => {
+      worker.onmessage = async e => {
         const { type, data, progress, error } = e.data;
 
         if (type === 'progress') {
           this.uploadView.updateProgress(progress);
         } else if (type === 'complete') {
           try {
+            await saveStatsHistory(data).catch(saveError => {
+              console.warn('Failed to save history:', saveError);
+            });
             this.currentView = 'dashboard';
             this.dashboardView.setStats(data);
             this.render();
@@ -117,6 +124,50 @@ export class App {
         },
       });
     });
+  }
+
+  private handleLoadHistory(historyEntry: StatsHistoryEntry): void {
+    try {
+      const deserializedData = this.deserializeStatsData(historyEntry.data);
+      if (!this.isValidStatsResult(deserializedData)) {
+        throw new Error('Invalid stats data structure');
+      }
+      this.currentView = 'dashboard';
+      this.dashboardView.setStats(deserializedData as StatsResult);
+      this.render();
+    } catch (error) {
+      console.error('Failed to load history entry:', error);
+      const message = error instanceof Error ? error.message : 'Failed to load history';
+      this.uploadView.showError(`Failed to load history: ${message}`);
+    }
+  }
+
+  private deserializeStatsData(data: unknown): unknown {
+    return JSON.parse(JSON.stringify(data), (key, value) => {
+      if ((key === 'time' || key === 'firstBetTime' || key === 'lastBetTime') && value) {
+        const date = new Date(value);
+        if (!Number.isFinite(date.getTime())) {
+          console.warn(`Invalid date value for key ${key}:`, value);
+          return undefined;
+        }
+        return date;
+      }
+      return value;
+    });
+  }
+
+  private isValidStatsResult(data: unknown): data is StatsResult {
+    if (!data || typeof data !== 'object') return false;
+    const stats = data as Partial<StatsResult>;
+    return (
+      stats.overall !== undefined &&
+      typeof stats.overall === 'object' &&
+      Array.isArray(stats.games) &&
+      Array.isArray(stats.providers) &&
+      stats.streaks !== undefined &&
+      stats.betStats !== undefined &&
+      Array.isArray(stats.equityCurve)
+    );
   }
 
   private handleBackToUpload(): void {
