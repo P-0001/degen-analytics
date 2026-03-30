@@ -2,6 +2,8 @@
 
 A completely remastered web application for analyzing betting statistics with a focus on **privacy**, **modern design**, and **performance**.
 
+🔗 **[View Live Preview](https://degen-analytics.fly.dev/)**
+
 ## 🔒 Privacy-First Architecture
 
 - **100% Client-Side Processing** - All data analysis happens in your browser
