@@ -326,7 +326,7 @@ export function computeStats(
   };
 }
 
-self.onmessage = async (e: MessageEvent) => {
+self.onmessage = async (e: MessageEvent): Promise<void> => {
   const { type, data } = e.data;
 
   if (type === 'process') {

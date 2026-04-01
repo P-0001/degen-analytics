@@ -1116,7 +1116,7 @@ describe('Bet Scoring', () => {
       expect(score).toBeGreaterThan(0);
     });
 
-    it('should score losing bets negatively', () => {
+    it('should score losing bets as multiplier only', () => {
       const bet: BetRecord = {
         id: '1',
         gameName: 'Test',
@@ -1130,7 +1130,7 @@ describe('Bet Scoring', () => {
       };
 
       const score = scoreBet(bet);
-      expect(score).toBe(-2);
+      expect(score).toBe(0);
     });
 
     it('should calculate score based on net profit and multiplier', () => {
@@ -1147,7 +1147,8 @@ describe('Bet Scoring', () => {
       };
 
       const score = scoreBet(bet);
-      expect(score).toBe(11);
+      // net = 200 - 100 = 100, multiplier = 2, score = 100 + 2 = 102
+      expect(score).toBe(102);
     });
   });
 
@@ -1221,7 +1222,8 @@ describe('Bet Scoring', () => {
       };
 
       const score = scoreBet(bet);
-      expect(score).toBe(-1);
+      // net = 0, netScore = 0, multiplier = 1, score = 0 + 1 = 1
+      expect(score).toBe(1);
     });
   });
 
@@ -1268,8 +1270,8 @@ describe('Bet Scoring', () => {
       };
 
       const score = scoreBet(bet);
-      expect(score).toBeGreaterThan(0);
-      expect(score).toBeCloseTo(1098.9, 1);
+      // net = 1000 - 1 = 999, multiplier = 1000, score = 999 + 1000 = 1999
+      expect(score).toBe(1999);
     });
 
     it('should round multiplier score to 2 decimal places', () => {
@@ -1286,12 +1288,13 @@ describe('Bet Scoring', () => {
       };
 
       const score = scoreBet(bet);
-      expect(score).toBe(3);
+      // net = 25 - 10 = 15, multiplier = 2.5, score = 15 + 2.5 = 17.5, rounded = 18
+      expect(score).toBe(18);
     });
   });
 
   describe('Net Profit Impact', () => {
-    it('should calculate net score as -1 for losses', () => {
+    it('should calculate net score as 0 for losses', () => {
       const bet: BetRecord = {
         id: '1',
         gameName: 'Test',
@@ -1305,10 +1308,11 @@ describe('Bet Scoring', () => {
       };
 
       const score = scoreBet(bet);
-      expect(score).toBe(-1.5);
+      // net = 25 - 50 = -25, netScore = 0 (loss), multiplier = 0.5, score = 0 + 0.5 = 0.5, rounded = 1
+      expect(score).toBe(1);
     });
 
-    it('should divide net profit by 10 for wins', () => {
+    it('should add net profit and multiplier for wins', () => {
       const bet: BetRecord = {
         id: '1',
         gameName: 'Test',
@@ -1322,7 +1326,8 @@ describe('Bet Scoring', () => {
       };
 
       const score = scoreBet(bet);
-      expect(score).toBe(20);
+      // net = 110 - 10 = 100, multiplier = 11, score = 100 + 11 = 111
+      expect(score).toBe(111);
     });
 
     it('should handle small net profits', () => {
@@ -1339,31 +1344,12 @@ describe('Bet Scoring', () => {
       };
 
       const score = scoreBet(bet);
-      expect(score).toBeCloseTo(0.2, 1);
+      // net = 11 - 10 = 1, multiplier = 1.1, score = 1 + 1.1 = 2.1, rounded = 2
+      expect(score).toBe(2);
     });
   });
 
   describe('Combined Scoring', () => {
-    it('should combine net score and multiplier score correctly', () => {
-      const bet: BetRecord = {
-        id: '1',
-        gameName: 'Test',
-        betAmount: 100,
-        payout: 300,
-        multiplier: 3,
-        currency: 'USD',
-        time: new Date(),
-        rollback: false,
-        complete: true,
-      };
-
-      const netScore = (300 - 100) / 10;
-      const multiplierScore = 3 - 1;
-      const expectedScore = netScore + multiplierScore;
-
-      expect(scoreBet(bet)).toBe(expectedScore);
-    });
-
     it('should handle zero payout correctly', () => {
       const bet: BetRecord = {
         id: '1',
@@ -1378,7 +1364,7 @@ describe('Bet Scoring', () => {
       };
 
       const score = scoreBet(bet);
-      expect(score).toBe(-2);
+      expect(score).toBe(0);
     });
   });
 });

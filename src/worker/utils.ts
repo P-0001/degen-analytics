@@ -1,3 +1,4 @@
+import { saveStatsToHistory, getStatsFromHistory, clearStatsHistory as clearDB } from './historyDB';
 import type {
   BetRecord,
   TransactionRecord,
@@ -7,6 +8,9 @@ import type {
   StatsHistoryEntry,
   StatsResult,
 } from '../types';
+
+// Maximum points to store in equity curve
+const MAX_EQUITY_CURVE_POINTS = 500;
 
 export function parseCSVLine(line: string): string[] {
   const out: string[] = [];
@@ -199,13 +203,15 @@ function replaceAll(s: string, searchValue: string, replaceValue: string) {
 }
 
 function parseDate(value: string): Date {
-  if (typeof value !== 'string') throw new Error('Invalid timestamp Not String');
+  if (!value || typeof value !== 'string') throw new Error('Invalid timestamp Not String');
 
-  const normalized = value.includes('/') ? replaceAll(value, '/', '-') : value;
+  // example 2026/01/03 09:55:26 in UTC
+  const raw = value.trim();
+  const [datePart, timePart] = raw.split(' ');
+  const datePartNormalized = replaceAll(datePart, '/', '-');
+  const forcedIso = `${datePartNormalized}T${timePart}Z`;
 
-  const isoLike = normalized.includes('T') ? normalized : normalized.replace(' ', 'T');
-
-  const timestamp = new Date(isoLike + (isoLike.endsWith('Z') ? '' : 'Z'));
+  const timestamp = new Date(forcedIso);
 
   if (!Number.isFinite(timestamp.getTime())) {
     const d2 = new Date(value);
@@ -275,14 +281,12 @@ export function computeTransactionStats(
     }
   }
 
-  const profit = totalWithdrawals - totalDeposits;
-
   return {
     totalDeposits,
     totalWithdrawals,
     depositCount,
     withdrawalCount,
-    netTransactions: profit,
+    netTransactions: totalWithdrawals - totalDeposits,
   };
 }
 
@@ -327,11 +331,11 @@ export function scoreBet(bet: BetRecord): number {
   if (!Number.isFinite(b) || !Number.isFinite(p) || !Number.isFinite(m)) return 0;
 
   const net = p - b;
-  const netScore = net <= 0 ? -1 : net / 10;
+  const netScore = net <= 0 ? 0 : net;
 
-  const multiplierScore = Math.round((m - 1) * 100) / 100;
+  const multiplierScore = Math.round(m * 100) / 100;
 
-  return netScore + multiplierScore;
+  return Math.round(netScore + multiplierScore);
 }
 
 function generateUUID(): string {
@@ -345,8 +349,6 @@ function generateUUID(): string {
     return v.toString(16);
   });
 }
-
-const MAX_EQUITY_CURVE_POINTS = 500;
 
 function simplifyEquityCurve(
   curve: { time: number; value: number }[],
@@ -375,8 +377,6 @@ function simplifyEquityCurve(
 }
 
 export async function saveStatsHistory(stats: StatsResult): Promise<void> {
-  const { saveStatsToHistory } = await import('./historyDB');
-
   const historyEntry: StatsHistoryEntry = {
     id: generateUUID(),
     time: Date.now(),
@@ -387,6 +387,7 @@ export async function saveStatsHistory(stats: StatsResult): Promise<void> {
       providers: stats.providers,
       streaks: stats.streaks,
       betStats: stats.betStats,
+      // Simplify equity curve to reduce storage size
       equityCurve: simplifyEquityCurve(stats.equityCurve),
       invalidRecords: stats.invalidRecords,
       processingTime: stats.processingTime,
@@ -397,11 +398,9 @@ export async function saveStatsHistory(stats: StatsResult): Promise<void> {
 }
 
 export async function getStatsHistory(): Promise<StatsHistoryEntry[]> {
-  const { getStatsFromHistory } = await import('./historyDB');
   return await getStatsFromHistory();
 }
 
 export async function clearStatsHistory(): Promise<void> {
-  const { clearStatsHistory: clearDB } = await import('./historyDB');
   await clearDB();
 }

@@ -1,7 +1,7 @@
 import type { Plugin } from 'vite';
 import { basename } from 'path';
 
- interface MinifyOptions {
+interface MinifyOptions {
   removeComments?: boolean;
   collapseWhitespace?: boolean;
 }
@@ -14,7 +14,7 @@ function formatBytes(bytes: number): string {
   return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
 }
 
- function sizeDiff(original: string, minified: string): string {
+function sizeDiff(original: string, minified: string): string {
   const originalSize = original.length;
   const minifiedSize = minified.length;
   const saved = originalSize - minifiedSize;
@@ -22,11 +22,8 @@ function formatBytes(bytes: number): string {
   return `[${formatBytes(originalSize)} -> ${formatBytes(minifiedSize)}] ${formatBytes(saved)} (${percentage.toFixed(2)}%)`;
 }
 
- function minifyHBS(content: string, options: MinifyOptions = {}): string {
-  const {
-    removeComments = true,
-    collapseWhitespace = true,
-  } = options;
+function minifyHBS(content: string, options: MinifyOptions = {}): string {
+  const { removeComments = true, collapseWhitespace = true } = options;
 
   let minified = content;
 
@@ -57,10 +54,10 @@ export function minifyHBSPlugin(options: MinifyOptions = {}): Plugin {
         // console.log(`\n[vite-plugin-minify-hbs] Minified ${basename(id, '.hbs?raw')}: ${savedMsg}`);
         return {
           code: minified,
-          map: null
+          map: null,
         };
       }
       return null;
-    }
+    },
   };
 }
