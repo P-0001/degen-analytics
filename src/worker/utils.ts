@@ -260,34 +260,36 @@ export function computeTransactionStats(
   transactions: TransactionRecord[],
   currency?: string
 ): TransactionStats {
-  let filtered = transactions.filter(t => t.status.toLowerCase() === 'complete');
-
-  if (currency) {
-    filtered = filtered.filter(t => t.currency.toLowerCase() === currency.toLowerCase());
-  }
-
-  let totalDeposits = 0;
-  let totalWithdrawals = 0;
-  let depositCount = 0;
-  let withdrawalCount = 0;
-
-  for (const transaction of filtered) {
-    if (transaction.type === 'deposit') {
-      totalDeposits += transaction.amount;
-      depositCount++;
-    } else if (transaction.type === 'withdrawal') {
-      totalWithdrawals += transaction.amount;
-      withdrawalCount++;
-    }
-  }
-
-  return {
-    totalDeposits,
-    totalWithdrawals,
-    depositCount,
-    withdrawalCount,
-    netTransactions: totalWithdrawals - totalDeposits,
+  const stats: TransactionStats = {
+    totalDeposits: 0,
+    totalWithdrawals: 0,
+    depositCount: 0,
+    withdrawalCount: 0,
+    netTransactions: 0,
   };
+
+  transactions.forEach(transaction => {
+    const { status, currency: c, type, amount } = transaction;
+    if (status.toLowerCase() !== 'complete') {
+      return;
+    }
+
+    if (currency && c.toLowerCase() !== currency.toLowerCase()) {
+      return;
+    }
+
+    if (type === 'deposit') {
+      stats.totalDeposits += amount;
+      stats.depositCount++;
+    } else if (type === 'withdrawal') {
+      stats.totalWithdrawals += amount;
+      stats.withdrawalCount++;
+    }
+  });
+
+  stats.netTransactions = stats.totalWithdrawals - stats.totalDeposits;
+
+  return stats;
 }
 
 export function normalizeBet(raw: RawBetRecord): BetRecord | null {

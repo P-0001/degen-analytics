@@ -8,6 +8,7 @@ declare const __APP_VERSION__: string;
 export class UploadView {
   private onFileProcess: (file: File, options: FilterOptions) => Promise<void>;
   private onLoadHistory: (historyEntry: StatsHistoryEntry) => void;
+  private onNavigateToTools: () => void;
   private isProcessing = false;
   private currentProgress = 0;
   private errorMessage = '';
@@ -16,10 +17,12 @@ export class UploadView {
 
   constructor(
     onFileProcess: (file: File, options: FilterOptions) => Promise<void>,
-    onLoadHistory: (historyEntry: StatsHistoryEntry) => void
+    onLoadHistory: (historyEntry: StatsHistoryEntry) => void,
+    onNavigateToTools: () => void
   ) {
     this.onFileProcess = onFileProcess;
     this.onLoadHistory = onLoadHistory;
+    this.onNavigateToTools = onNavigateToTools;
   }
 
   get progress(): number {
@@ -112,6 +115,7 @@ export class UploadView {
     const advancedOptions = document.getElementById('advanced-options');
     const advancedIcon = document.getElementById('advanced-icon');
     const howToBtn = document.getElementById('how-to-btn');
+    const toolsBtn = document.getElementById('tools-btn');
     const howToModal = document.getElementById('how-to-modal');
     const closeModal = document.getElementById('close-modal');
 
@@ -131,6 +135,12 @@ export class UploadView {
     if (howToBtn) {
       this.addEventListener(howToBtn, 'click', () => {
         howToModal?.classList.remove('hidden');
+      });
+    }
+
+    if (toolsBtn) {
+      this.addEventListener(toolsBtn, 'click', () => {
+        this.onNavigateToTools();
       });
     }
 

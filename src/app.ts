@@ -1,22 +1,26 @@
 import type { FilterOptions, StatsHistoryEntry, StatsResult } from './types';
 import { UploadView } from './views/upload';
 import { DashboardView } from './views/dashboard';
+import { ToolsView } from './views/tools';
 import { saveStatsHistory } from './worker/utils';
 
 export class App {
   private container: HTMLElement;
-  private currentView: 'upload' | 'dashboard' = 'upload';
+  private currentView: 'upload' | 'dashboard' | 'tools' = 'upload';
   private uploadView: UploadView;
   private dashboardView: DashboardView;
+  private toolsView: ToolsView;
   private activeWorker: Worker | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
     this.uploadView = new UploadView(
       this.handleFileProcess.bind(this),
-      this.handleLoadHistory.bind(this)
+      this.handleLoadHistory.bind(this),
+      this.handleNavigateToTools.bind(this)
     );
     this.dashboardView = new DashboardView(this.handleBackToUpload.bind(this));
+    this.toolsView = new ToolsView(this.handleBackToUpload.bind(this));
   }
 
   private async handleFileProcess(file: File, options: FilterOptions): Promise<void> {
@@ -170,6 +174,11 @@ export class App {
     );
   }
 
+  private handleNavigateToTools(): void {
+    this.currentView = 'tools';
+    this.render();
+  }
+
   private handleBackToUpload(): void {
     this.dashboardView.destroy();
     this.currentView = 'upload';
@@ -181,9 +190,12 @@ export class App {
     if (this.currentView === 'upload') {
       this.container.innerHTML = this.uploadView.render();
       this.uploadView.attachEventListeners();
-    } else {
+    } else if (this.currentView === 'dashboard') {
       this.container.innerHTML = this.dashboardView.render();
       this.dashboardView.attachEventListeners();
+    } else if (this.currentView === 'tools') {
+      this.container.innerHTML = this.toolsView.render();
+      this.toolsView.attachEventListeners();
     }
   }
 }

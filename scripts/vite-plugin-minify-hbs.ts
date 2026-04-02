@@ -47,10 +47,10 @@ export function minifyHBSPlugin(options: MinifyOptions = {}): Plugin {
   return {
     name: 'vite-plugin-minify-hbs',
     enforce: 'pre',
-    transform(code: string, id: string) {
+    async transform(code: string, id: string) {
       if (id.endsWith('.hbs?raw')) {
         const minified = minifyHBS(code, options);
-        //  const savedMsg = sizeDiff(code, minified);
+        //const savedMsg = sizeDiff(code, minified);
         // console.log(`\n[vite-plugin-minify-hbs] Minified ${basename(id, '.hbs?raw')}: ${savedMsg}`);
         return {
           code: minified,
