@@ -167,3 +167,36 @@ export interface WorkerMessage {
   progress?: number;
   error?: string;
 }
+
+export interface ProcessFilesMessage {
+  type: 'process';
+  data: {
+    files: { name: string; content: string }[];
+    fileType: 'bets' | 'deposits' | 'withdrawals';
+  };
+}
+
+export interface ProgressMessage {
+  type: 'progress';
+  progress: number;
+}
+
+export interface CompleteMessage {
+  type: 'complete';
+  data: {
+    csv: string;
+    rowCount: number;
+    fileType: string;
+  };
+}
+
+export interface ErrorMessage {
+  type: 'error';
+  error: string;
+}
+
+export interface FileGroup {
+  bets: File[];
+  deposits: File[];
+  withdrawals: File[];
+}

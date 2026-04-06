@@ -42,6 +42,8 @@ export default [
         indexedDB: 'readonly',
         IDBOpenDBRequest: 'readonly',
         IDBRequest: 'readonly',
+        FileList: 'readonly',
+        Blob: 'readonly',
       },
     },
     plugins: {
