@@ -66,6 +66,8 @@ export function convertCurrencyInRows(
     if (newRow.Currency === data.toCurrency) {
       return newRow;
     }
+    newRow.Currency = data.toCurrency;
+    
     const fromCurrency = newRow.Currency;
 
     for (const col of columns) {
