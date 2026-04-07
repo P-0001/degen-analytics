@@ -43,13 +43,16 @@ export function dedupeRows(rows: Record<string, string>[]): Record<string, strin
 async function fetchExchangeRates(baseCurrency: string): Promise<Record<string, number>> {
   try {
     const response = await fetch(`https://open.er-api.com/v6/latest/${baseCurrency}`);
-    const data = await response.json() as { rates: Record<string, number> };
+    const data = (await response.json()) as { rates: Record<string, number> };
     if (!data.rates || Object.keys(data.rates).length === 0) {
       throw new Error('Failed to load exchange rates');
     }
     return data.rates;
   } catch (error) {
-    throw new Error(`Failed to fetch exchange rates: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to fetch exchange rates: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      { cause: error }
+    );
   }
 }
 
@@ -63,22 +66,28 @@ export function convertCurrencyInRows(
 ): Record<string, string>[] {
   return rows.map(row => {
     const newRow = { ...row };
-    if (newRow.Currency === data.toCurrency) {
+    const fromCurrency = newRow.Currency;
+    
+    if (fromCurrency === data.toCurrency) {
       return newRow;
     }
-    newRow.Currency = data.toCurrency;
-    
-    const fromCurrency = newRow.Currency;
+
+    const rate = data.exchangeRates[fromCurrency];
+    if (!rate) {
+      console.warn(`No exchange rate found for ${fromCurrency}`);
+      return newRow;
+    }
 
     for (const col of columns) {
       if (newRow[col]) {
         const value = parseFloat(newRow[col]);
-        const rate = data.exchangeRates[fromCurrency];
-        if (!isNaN(value) && rate) {
+        if (!isNaN(value)) {
           newRow[col] = (value / rate).toFixed(2);
         }
       }
     }
+    
+    newRow.Currency = data.toCurrency;
     return newRow;
   });
 }
@@ -154,8 +163,15 @@ self.onmessage = async (e: MessageEvent<ProcessFilesMessage>): Promise<void> => 
 
       let deduped = dedupeRows(allRows);
 
-      if (convertCurrency && currencyFrom && currencyTo && currencyColumns && currencyColumns.length > 0) {
+      if (
+        convertCurrency &&
+        currencyFrom &&
+        currencyTo &&
+        currencyColumns &&
+        currencyColumns.length > 0
+      ) {
         const rates = await fetchExchangeRates(currencyFrom);
+        console.log(rates);
         const conversionRate = rates[currencyTo];
         if (!conversionRate) {
           throw new Error(`Conversion rate not found for ${currencyFrom} to ${currencyTo}`);

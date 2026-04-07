@@ -8,7 +8,7 @@ import betsStatsCardPartial from '../templates/partials/betsStatsCard.hbs?raw';
 import historyItemPartial from '../templates/partials/historyItem.hbs?raw';
 
 import Handlebars from 'handlebars';
-import {config} from '../config';
+import { config } from '../config';
 import {
   Chart,
   type ChartOptions,

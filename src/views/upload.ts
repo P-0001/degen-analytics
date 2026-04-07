@@ -2,7 +2,7 @@ import type { FilterOptions, StatsHistoryEntry } from '../types';
 import Handlebars from 'handlebars';
 import uploadTemplate from '../templates/upload.hbs?raw';
 import { getStatsHistory, clearStatsHistory } from '../worker/utils';
-import {config} from '../config';
+import { config } from '../config';
 
 export class UploadView {
   private onFileProcess: (file: File, options: FilterOptions) => Promise<void>;

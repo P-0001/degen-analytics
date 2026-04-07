@@ -417,14 +417,18 @@ export class ToolsView {
   ): Promise<{ csv: string; rowCount: number } | null> {
     if (files.length === 0 || !this.worker) return null;
 
-    const convertCurrency = (document.getElementById('convert-currency') as HTMLInputElement)?.checked || false;
+    const convertCurrency =
+      (document.getElementById('convert-currency') as HTMLInputElement)?.checked || false;
     const currencyFromSelect = document.getElementById('currency-from') as HTMLSelectElement;
     const currencyColumnsInput = document.getElementById('currency-columns') as HTMLInputElement;
-    
+
     const currencyFrom = currencyFromSelect?.value || undefined;
     const currencyTo = 'USD';
     const currencyColumns = currencyColumnsInput?.value
-      ? currencyColumnsInput.value.split(',').map(col => col.trim()).filter(col => col.length > 0)
+      ? currencyColumnsInput.value
+          .split(',')
+          .map(col => col.trim())
+          .filter(col => col.length > 0)
       : undefined;
 
     return new Promise((resolve, reject) => {
@@ -582,7 +586,7 @@ export class ToolsView {
         console.error('Failed to fetch exchange rates:', response.status, response.statusText);
         return;
       }
-      const data = await response.json() as { rates: Record<string, number> };
+      const data = (await response.json()) as { rates: Record<string, number> };
       console.log('Exchange rates received:', Object.keys(data.rates || {}).length, 'currencies');
       if (!data.rates || Object.keys(data.rates).length === 0) {
         console.error('Failed to load exchange rates - empty rates');
