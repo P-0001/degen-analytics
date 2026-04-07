@@ -173,6 +173,10 @@ export interface ProcessFilesMessage {
   data: {
     files: { name: string; content: string }[];
     fileType: 'bets' | 'deposits' | 'withdrawals';
+    convertCurrency?: boolean;
+    currencyFrom?: string;
+    currencyTo?: string;
+    currencyColumns?: string[];
   };
 }
 

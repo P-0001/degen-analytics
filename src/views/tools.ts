@@ -1,6 +1,7 @@
 import toolsTemplate from '../templates/tools.hbs?raw';
 import Handlebars from 'handlebars';
 import ToolsWorker from '../worker/tools.worker?worker';
+import { config } from '../config';
 import type { FileGroup } from '../types';
 
 export class ToolsView {
@@ -14,6 +15,7 @@ export class ToolsView {
     new Map();
   private currentMessageHandler: ((e: MessageEvent) => void) | null = null;
   private isProcessing: boolean = false;
+  private exchangeRates: Record<string, number> = {};
 
   constructor(onBack: () => void) {
     this.onBack = onBack;
@@ -22,7 +24,8 @@ export class ToolsView {
 
   public render(): string {
     const template = Handlebars.compile(toolsTemplate);
-    return template({});
+    const { appName } = config;
+    return template({ appName });
   }
 
   private removeEventListeners(): void {
@@ -40,6 +43,8 @@ export class ToolsView {
   public attachEventListeners(): void {
     this.removeEventListeners();
 
+    this.loadCurrencies();
+
     const backBtn = document.getElementById('back-btn');
     if (backBtn) {
       this.addEventListener(backBtn, 'click', this.onBack);
@@ -53,6 +58,8 @@ export class ToolsView {
     const form = document.getElementById('tools-form') as HTMLFormElement;
     const directoryModeBtn = document.getElementById('directory-mode-btn');
     const filesModeBtn = document.getElementById('files-mode-btn');
+    const convertCurrencyCheckbox = document.getElementById('convert-currency') as HTMLInputElement;
+    const currencyOptions = document.getElementById('currency-options');
 
     if (directoryModeBtn && filesModeBtn) {
       this.addEventListener(directoryModeBtn, 'click', () => {
@@ -73,6 +80,16 @@ export class ToolsView {
         directoryModeBtn.classList.add('bg-slate-700', 'hover:bg-slate-600');
         this.clearSelection();
         this.updateUploadLabel();
+      });
+    }
+
+    if (convertCurrencyCheckbox && currencyOptions) {
+      this.addEventListener(convertCurrencyCheckbox, 'change', () => {
+        if (convertCurrencyCheckbox.checked) {
+          currencyOptions.classList.remove('hidden');
+        } else {
+          currencyOptions.classList.add('hidden');
+        }
       });
     }
 
@@ -400,6 +417,16 @@ export class ToolsView {
   ): Promise<{ csv: string; rowCount: number } | null> {
     if (files.length === 0 || !this.worker) return null;
 
+    const convertCurrency = (document.getElementById('convert-currency') as HTMLInputElement)?.checked || false;
+    const currencyFromSelect = document.getElementById('currency-from') as HTMLSelectElement;
+    const currencyColumnsInput = document.getElementById('currency-columns') as HTMLInputElement;
+    
+    const currencyFrom = currencyFromSelect?.value || undefined;
+    const currencyTo = 'USD';
+    const currencyColumns = currencyColumnsInput?.value
+      ? currencyColumnsInput.value.split(',').map(col => col.trim()).filter(col => col.length > 0)
+      : undefined;
+
     return new Promise((resolve, reject) => {
       if (this.currentMessageHandler && this.worker) {
         this.worker.removeEventListener('message', this.currentMessageHandler);
@@ -442,6 +469,10 @@ export class ToolsView {
             data: {
               files: contents,
               fileType,
+              convertCurrency,
+              currencyFrom,
+              currencyTo,
+              currencyColumns,
             },
           });
         })
@@ -541,6 +572,54 @@ export class ToolsView {
     });
 
     downloadButtons.classList.remove('hidden');
+  }
+
+  private async loadCurrencies(): Promise<void> {
+    try {
+      console.log('Fetching exchange rates...');
+      const response = await fetch('https://open.er-api.com/v6/latest/USD');
+      if (!response.ok) {
+        console.error('Failed to fetch exchange rates:', response.status, response.statusText);
+        return;
+      }
+      const data = await response.json() as { rates: Record<string, number> };
+      console.log('Exchange rates received:', Object.keys(data.rates || {}).length, 'currencies');
+      if (!data.rates || Object.keys(data.rates).length === 0) {
+        console.error('Failed to load exchange rates - empty rates');
+        return;
+      }
+      this.exchangeRates = data.rates;
+      console.log('Populating currency dropdowns...');
+      this.populateCurrencyDropdowns();
+    } catch (error) {
+      console.error('Failed to fetch exchange rates:', error);
+    }
+  }
+
+  private populateCurrencyDropdowns(): void {
+    const currencyFromSelect = document.getElementById('currency-from') as HTMLSelectElement;
+
+    if (!currencyFromSelect) {
+      console.warn('Currency dropdown element not found');
+      return;
+    }
+
+    const currencies = ['USD', ...Object.keys(this.exchangeRates).sort()];
+    const uniqueCurrencies = [...new Set(currencies)];
+
+    console.log('Populating dropdown with', uniqueCurrencies.length, 'currencies');
+
+    currencyFromSelect.innerHTML = '';
+
+    uniqueCurrencies.forEach(currency => {
+      const option = document.createElement('option');
+      option.value = currency;
+      option.textContent = currency;
+      currencyFromSelect.appendChild(option);
+    });
+
+    currencyFromSelect.value = 'USD';
+    console.log('Currency dropdown populated successfully');
   }
 
   public destroy(): void {

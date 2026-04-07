@@ -8,6 +8,7 @@ import betsStatsCardPartial from '../templates/partials/betsStatsCard.hbs?raw';
 import historyItemPartial from '../templates/partials/historyItem.hbs?raw';
 
 import Handlebars from 'handlebars';
+import {config} from '../config';
 import {
   Chart,
   type ChartOptions,
@@ -154,8 +155,102 @@ export class DashboardView {
     };
   }
 
-  public render(): string {
-    if (!this.stats) return '<div>No stats available</div>';
+  private calculateMaxDrawdown(equityCurve: { time: number; value: number }[]): number {
+    if (equityCurve.length === 0) return 0;
+
+    let peak = equityCurve[0]?.value ?? 0;
+    let maxDrawdown = 0;
+
+    for (const point of equityCurve) {
+      if (point.value > peak) peak = point.value;
+      const drawdown = peak - point.value;
+      if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+    }
+
+    return maxDrawdown;
+  }
+
+  private calculateDailyNet(dailyEquityMap: Map<string, number>): Map<string, number> {
+    const sortedDayKeys = Array.from(dailyEquityMap.keys()).sort();
+    const dayNet = new Map<string, number>();
+
+    for (let i = 0; i < sortedDayKeys.length; i++) {
+      const key = sortedDayKeys[i]!;
+      const dayEnd = dailyEquityMap.get(key)!;
+      const prevDayKey = i > 0 ? sortedDayKeys[i - 1] : undefined;
+      const prevEnd = prevDayKey !== undefined ? (dailyEquityMap.get(prevDayKey) ?? 0) : 0;
+      dayNet.set(key, dayEnd - prevEnd);
+    }
+
+    return dayNet;
+  }
+
+  private findBestDay(dayNet: Map<string, number>): { key: string | null; value: number } {
+    let bestDayKey: string | null = null;
+    let bestDayValue = Number.NEGATIVE_INFINITY;
+
+    for (const [k, v] of dayNet.entries()) {
+      if (v > bestDayValue) {
+        bestDayValue = v;
+        bestDayKey = k;
+      }
+    }
+
+    return { key: bestDayKey, value: bestDayValue };
+  }
+
+  private findWorstDay(dayNet: Map<string, number>): { key: string | null; value: number } {
+    let worstDayKey: string | null = null;
+    let worstDayValue = Number.POSITIVE_INFINITY;
+
+    for (const [k, v] of dayNet.entries()) {
+      if (v < worstDayValue) {
+        worstDayValue = v;
+        worstDayKey = k;
+      }
+    }
+
+    return { key: worstDayKey, value: worstDayValue };
+  }
+
+  private formatDayText(
+    dayKey: string | null,
+    dayValue: number,
+    dayNetSize: number,
+    currency: string
+  ): string {
+    if (!dayKey || !Number.isFinite(dayValue) || dayNetSize === 0) return 'N/A';
+
+    const parts = dayKey.split('-');
+    if (parts.length !== 3) return 'N/A';
+
+    const [year, month, day] = parts.map(Number);
+    if (
+      !Number.isFinite(year) ||
+      !Number.isFinite(month) ||
+      !Number.isFinite(day) ||
+      year < 1970 ||
+      month < 1 ||
+      month > 12 ||
+      day < 1 ||
+      day > 31
+    )
+      return 'N/A';
+
+    const d = new Date(Date.UTC(year, month - 1, day));
+    const dateText = new Intl.DateTimeFormat(undefined, {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    }).format(d);
+
+    const sign = dayValue >= 0 ? '+' : '-';
+    const amount = this.formatCurrency(Math.abs(dayValue), currency);
+    return `${dateText} (${sign}${amount.replace(/^-/, '')})`;
+  }
+
+  private prepareTemplateData(): Record<string, unknown> {
+    if (!this.stats) return {};
 
     const {
       overall,
@@ -170,109 +265,19 @@ export class DashboardView {
     const currency = overall.currency;
 
     const avgBetValue = overall.totalBets > 0 ? overall.totalBet / overall.totalBets : 0;
-
-    let maxDrawdownValue = 0;
-
-    if (equityCurve.length > 0) {
-      let peak = equityCurve[0]?.value ?? 0;
-      for (const p of equityCurve) {
-        if (p.value > peak) peak = p.value;
-        const dd = peak - p.value;
-        if (dd > maxDrawdownValue) maxDrawdownValue = dd;
-      }
-    }
+    const maxDrawdownValue = this.calculateMaxDrawdown(equityCurve);
 
     const dailyEquityMap = this.buildDailyEquityMap(equityCurve);
-    const sortedDayKeys = Array.from(dailyEquityMap.keys()).sort();
-    const dayNet = new Map<string, number>();
-    for (let i = 0; i < sortedDayKeys.length; i++) {
-      const key = sortedDayKeys[i]!;
-      const dayEnd = dailyEquityMap.get(key)!;
-      // Baseline: previous day's end-of-day cumulative equity, or 0 for the first day
-      const prevDayKey = i > 0 ? sortedDayKeys[i - 1] : undefined;
-      const prevEnd = prevDayKey !== undefined ? (dailyEquityMap.get(prevDayKey) ?? 0) : 0;
-      dayNet.set(key, dayEnd - prevEnd);
-    }
+    const dayNet = this.calculateDailyNet(dailyEquityMap);
 
-    let bestDayKey: string | null = null;
-    let bestDayValue = Number.NEGATIVE_INFINITY;
-    for (const [k, v] of dayNet.entries()) {
-      if (v > bestDayValue) {
-        bestDayValue = v;
-        bestDayKey = k;
-      }
-    }
+    const bestDay = this.findBestDay(dayNet);
+    const worstDay = this.findWorstDay(dayNet);
 
-    let worstDayKey: string | null = null;
-    let worstDayValue = Number.POSITIVE_INFINITY;
-    for (const [k, v] of dayNet.entries()) {
-      if (v < worstDayValue) {
-        worstDayValue = v;
-        worstDayKey = k;
-      }
-    }
+    const bestDayText = this.formatDayText(bestDay.key, bestDay.value, dayNet.size, currency);
+    const worstDayText = this.formatDayText(worstDay.key, worstDay.value, dayNet.size, currency);
 
-    const bestDayText =
-      bestDayKey && Number.isFinite(bestDayValue) && dayNet.size > 0
-        ? (() => {
-            const parts = bestDayKey.split('-');
-            if (parts.length !== 3) return 'N/A';
-            const [year, month, day] = parts.map(Number);
-            if (
-              !Number.isFinite(year) ||
-              !Number.isFinite(month) ||
-              !Number.isFinite(day) ||
-              year < 1970 ||
-              month < 1 ||
-              month > 12 ||
-              day < 1 ||
-              day > 31
-            )
-              return 'N/A';
-            const d = new Date(Date.UTC(year, month - 1, day));
-            const dateText = new Intl.DateTimeFormat(undefined, {
-              month: 'short',
-              day: '2-digit',
-              year: 'numeric',
-            }).format(d);
-            const sign = bestDayValue >= 0 ? '+' : '-';
-            const amount = this.formatCurrency(Math.abs(bestDayValue), currency);
-            return `${dateText} (${sign}${amount.replace(/^-/, '')})`;
-          })()
-        : 'N/A';
-
-    const worstDayText =
-      worstDayKey && Number.isFinite(worstDayValue) && dayNet.size > 0
-        ? (() => {
-            const parts = worstDayKey.split('-');
-            if (parts.length !== 3) return 'N/A';
-            const [year, month, day] = parts.map(Number);
-            if (
-              !Number.isFinite(year) ||
-              !Number.isFinite(month) ||
-              !Number.isFinite(day) ||
-              year < 1970 ||
-              month < 1 ||
-              month > 12 ||
-              day < 1 ||
-              day > 31
-            )
-              return 'N/A';
-            const d = new Date(Date.UTC(year, month - 1, day));
-            const dateText = new Intl.DateTimeFormat(undefined, {
-              month: 'short',
-              day: '2-digit',
-              year: 'numeric',
-            }).format(d);
-            const sign = worstDayValue >= 0 ? '+' : '-';
-            const amount = this.formatCurrency(Math.abs(worstDayValue), currency);
-            return `${dateText} (${sign}${amount.replace(/^-/, '')})`;
-          })()
-        : 'N/A';
-
-    const template = Handlebars.compile(dashboardTemplate);
-
-    const data = {
+    return {
+      ...config,
       totalBets: this.formatNumber(overall.totalBets),
       processingTime: processingTime.toFixed(0),
       invalidRecords: invalidRecords > 0 ? invalidRecords : null,
@@ -330,6 +335,13 @@ export class DashboardView {
           game: bet.gameName,
         })) || [],
     };
+  }
+
+  public render(): string {
+    if (!this.stats) return '<div>No stats available</div>';
+
+    const template = Handlebars.compile(dashboardTemplate);
+    const data = this.prepareTemplateData();
 
     return template(data);
   }

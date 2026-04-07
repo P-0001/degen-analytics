@@ -40,6 +40,47 @@ export function dedupeRows(rows: Record<string, string>[]): Record<string, strin
   return out;
 }
 
+async function fetchExchangeRates(baseCurrency: string): Promise<Record<string, number>> {
+  try {
+    const response = await fetch(`https://open.er-api.com/v6/latest/${baseCurrency}`);
+    const data = await response.json() as { rates: Record<string, number> };
+    if (!data.rates || Object.keys(data.rates).length === 0) {
+      throw new Error('Failed to load exchange rates');
+    }
+    return data.rates;
+  } catch (error) {
+    throw new Error(`Failed to fetch exchange rates: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+export function convertCurrencyInRows(
+  rows: Record<string, string>[],
+  columns: string[],
+  data: {
+    toCurrency: string;
+    exchangeRates: Record<string, number>;
+  }
+): Record<string, string>[] {
+  return rows.map(row => {
+    const newRow = { ...row };
+    if (newRow.Currency === data.toCurrency) {
+      return newRow;
+    }
+    const fromCurrency = newRow.Currency;
+
+    for (const col of columns) {
+      if (newRow[col]) {
+        const value = parseFloat(newRow[col]);
+        const rate = data.exchangeRates[fromCurrency];
+        if (!isNaN(value) && rate) {
+          newRow[col] = (value / rate).toFixed(2);
+        }
+      }
+    }
+    return newRow;
+  });
+}
+
 export function rowsToCsv(rows: Record<string, string>[], firstFileHeaders?: string[]): string {
   if (rows.length === 0) return '';
 
@@ -81,7 +122,7 @@ self.onmessage = async (e: MessageEvent<ProcessFilesMessage>): Promise<void> => 
 
   if (type === 'process') {
     try {
-      const { files, fileType } = data;
+      const { files, fileType, convertCurrency, currencyFrom, currencyTo, currencyColumns } = data;
 
       self.postMessage({ type: 'progress', progress: 0 } as ProgressMessage);
 
@@ -109,7 +150,19 @@ self.onmessage = async (e: MessageEvent<ProcessFilesMessage>): Promise<void> => 
 
       self.postMessage({ type: 'progress', progress: 85 } as ProgressMessage);
 
-      const deduped = dedupeRows(allRows);
+      let deduped = dedupeRows(allRows);
+
+      if (convertCurrency && currencyFrom && currencyTo && currencyColumns && currencyColumns.length > 0) {
+        const rates = await fetchExchangeRates(currencyFrom);
+        const conversionRate = rates[currencyTo];
+        if (!conversionRate) {
+          throw new Error(`Conversion rate not found for ${currencyFrom} to ${currencyTo}`);
+        }
+        deduped = convertCurrencyInRows(deduped, currencyColumns, {
+          toCurrency: currencyTo,
+          exchangeRates: rates,
+        });
+      }
 
       self.postMessage({ type: 'progress', progress: 95 } as ProgressMessage);
 
